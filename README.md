@@ -52,3 +52,7 @@ scripts/build-stars.mjs   trims the HYG CSV into src/data/stars.json
 - **Earth and Moon textures** come from the [three.js examples](https://github.com/mrdoob/three.js/tree/dev/examples/textures/planets) (MIT).
 - **Galaxy positions** (Andromeda, Triangulum, the Magellanic Clouds), cluster positions and other figures are rounded published values, with references on Wikipedia. Voyager positions are extrapolated linearly from their 2024 distances.
 - **Procedural parts.** The Milky Way's spiral, the galaxy particle clouds, the Oort cloud and the cosmic-web filaments are generated procedurally. They are representative structures, not real maps.
+
+## Deploying
+
+`npm run build` outputs a static site in `dist/` with relative paths, so it works from any subpath. The included workflow (`.github/workflows/deploy.yml`) builds and publishes to GitHub Pages. Under **Settings → Pages → Source**, choose **GitHub Actions**. Don't serve the repository root directly: the source `index.html` loads TypeScript that browsers can't run, so the page stays blank.

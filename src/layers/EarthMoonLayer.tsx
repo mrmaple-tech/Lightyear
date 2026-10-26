@@ -31,7 +31,7 @@ function MoonOrbit() {
 }
 
 export function EarthMoonLayer() {
-  const textures = useTexture(['/textures/earth_atmos_2048.jpg', '/textures/earth_lights_2048.png', '/textures/moon_1024.jpg']);
+  const textures = useTexture(['earth_atmos_2048.jpg', 'earth_lights_2048.png', 'moon_1024.jpg'].map((f) => `${import.meta.env.BASE_URL}textures/${f}`));
   textures.forEach((t) => (t.colorSpace = SRGBColorSpace));
   const [day, night, moonMap] = textures;
   const earthMat = useMemo(() => earthMaterial(day, night), [day, night]);
