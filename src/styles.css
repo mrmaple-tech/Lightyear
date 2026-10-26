@@ -151,3 +151,8 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+.scene-error { position: fixed; z-index: 25; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100vw - 2 * var(--gap))); padding: 24px; }
+.scene-error h2 { margin: 0 0 8px; font-size: 20px; }
+.scene-error p { margin: 0 0 8px; color: #cfd6e4; font-size: 14px; }
+.scene-error .detail { color: var(--muted); font-size: 12px; margin: 0; }
