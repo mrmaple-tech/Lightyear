@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/blissful-ramanujan-gj4gta]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
