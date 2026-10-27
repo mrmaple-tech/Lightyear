@@ -51,7 +51,8 @@ export function Universe() {
       <Space unit={KPC}><MilkyWayLayer /></Space>
       <Space unit={KPC}><LocalGroupLayer /></Space>
       <Space unit={MPC}><CosmicWebLayer /></Space>
-      <EffectComposer multisampling={4}>
+      {/* no MSAA: it multiplies the cost of every point/additive pixel; dpr 1.5 + bloom keep edges soft */}
+      <EffectComposer multisampling={0}>
         <Bloom mipmapBlur luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
         <Vignette offset={0.3} darkness={0.65} />
       </EffectComposer>

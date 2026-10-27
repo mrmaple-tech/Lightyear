@@ -38,8 +38,8 @@ export const pointsMaterial = (opacity = 1) =>
         vec2 d = abs(gl_PointCoord - 0.5) * 2.0;
         float r = length(d);
         float a = exp(-r * r * 5.0) * (1.0 - smoothstep(0.85, 1.0, r));
-        // faint diffraction spikes on the biggest (brightest) points
-        a += smoothstep(8.0, 12.0, vSize) * 0.5 * (exp(-d.x * 24.0) + exp(-d.y * 24.0)) * (1.0 - r * 0.9);
+        // faint diffraction spikes on the biggest (brightest) points only
+        if (vSize > 8.0) a += smoothstep(8.0, 12.0, vSize) * 0.5 * (exp(-d.x * 24.0) + exp(-d.y * 24.0)) * (1.0 - r * 0.9);
         gl_FragColor = vec4(vColor, a * vFade * uOpacity);
       }`,
   });
