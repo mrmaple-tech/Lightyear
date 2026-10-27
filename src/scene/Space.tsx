@@ -9,13 +9,10 @@ import { fade } from '../lib/coords.ts';
 import type { Fade } from '../data/layers.ts';
 
 export const K = 10;
-/** Scene units per meter at the current zoom. */
-export const sceneScale = () => K / 10 ** useStore.getState().logD;
-
 export function Space({ unit, children }: { unit: number; children: ReactNode }) {
   const ref = useRef<Group>(null!);
   useFrame(() => {
-    const s = sceneScale();
+    const s = K / 10 ** useStore.getState().logD;
     ref.current.scale.setScalar(unit * s);
     ref.current.position.copy(useStore.getState().focus).multiplyScalar(-s);
   });

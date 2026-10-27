@@ -1,6 +1,6 @@
 // Minimal inline stroke icons (Lucide-style geometry).
-const I = ({ d, label }: { d: string; label?: string }) => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden={!label} aria-label={label}>
+const I = ({ d }: { d: string }) => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d={d} />
   </svg>
 );

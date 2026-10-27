@@ -18,7 +18,7 @@ const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 function zoom(dLog: number) {
   const s = useStore.getState();
   if (s.flight) s.set({ flight: null, targetLogD: s.logD });
-  s.zoomBy(dLog);
+  s.set({ targetLogD: s.targetLogD + dLog });
 }
 
 export function Rig() {

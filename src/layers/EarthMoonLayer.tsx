@@ -8,7 +8,7 @@ import { get } from '../catalog.ts';
 import { AU, earthBasis, eqjToScene } from '../lib/coords.ts';
 import { BODIES } from '../data/solarSystem.ts';
 import { LAYERS } from '../data/layers.ts';
-import { earthMaterial } from '../scene/materials.ts';
+import { atmosphereMaterial, earthMaterial } from '../scene/materials.ts';
 import { Body } from '../scene/Body.tsx';
 import { Orbit } from '../scene/Orbit.tsx';
 import { useFade } from '../scene/Space.tsx';
@@ -31,10 +31,11 @@ function MoonOrbit() {
 }
 
 export function EarthMoonLayer() {
-  const textures = useTexture(['earth_atmos_2048.jpg', 'earth_lights_2048.png', 'moon_1024.jpg'].map((f) => `${import.meta.env.BASE_URL}textures/${f}`));
+  const textures = useTexture(['earth_atmos_2048.jpg', 'earth_lights_2048.jpg', 'moon_1024.jpg'].map((f) => `${import.meta.env.BASE_URL}textures/${f}`));
   textures.forEach((t) => (t.colorSpace = SRGBColorSpace));
   const [day, night, moonMap] = textures;
   const earthMat = useMemo(() => earthMaterial(day, night), [day, night]);
+  const halo = useMemo(() => atmosphereMaterial('#5c9dff', 1.06), []);
 
   const spinEarth = (m: Mesh) => {
     const t = simDate();
@@ -53,6 +54,8 @@ export function EarthMoonLayer() {
     <>
       <Body id="earth" window={EARTH.fade} label={false} onFrame={spinEarth}>
         <primitive object={earthMat} attach="material" />
+        {/* thin atmosphere glow just past the limb */}
+        <mesh scale={1.06} material={halo}><sphereGeometry args={[1, 64, 32]} /></mesh>
       </Body>
       <Body id="moon" window={MOON.fade} onFrame={faceEarth}>
         <meshStandardMaterial map={moonMap} roughness={1} />

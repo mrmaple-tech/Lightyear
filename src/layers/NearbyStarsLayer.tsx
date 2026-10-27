@@ -21,7 +21,8 @@ export function NearbyStarsLayer() {
       // brighter stars: bigger and pushed past 1.0 so bloom picks them up
       const boost = Math.min(2.2, Math.max(0.35, 1.25 - absmag * 0.09));
       c.push(p.x, p.y, p.z, r * boost, g * boost, b * boost, Math.min(13, Math.max(2.2, 8 - absmag * 0.55)));
-      if (name in FAMOUS_STARS) labels.push({ id: `star-${i}`, name, p: p.toArray(), far: p.length() > 50 });
+      // Proxima sits beside Rigil Kentaurus on screen; it stays searchable but unlabeled
+      if (name in FAMOUS_STARS && name !== 'Proxima Centauri') labels.push({ id: `star-${i}`, name, p: p.toArray(), far: p.length() > 50 });
     });
     return { geometry: c.build(), labels };
   }, []);

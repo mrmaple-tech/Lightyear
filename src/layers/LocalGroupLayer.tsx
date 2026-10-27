@@ -4,6 +4,7 @@ import { LOCAL_GROUP, MILKY_WAY as MW } from '../data/deepSky.ts';
 import { LAYERS } from '../data/layers.ts';
 import { GAL_BASIS, galDir } from '../lib/coords.ts';
 import { Label } from '../scene/Label.tsx';
+import { Glow } from '../scene/Glow.tsx';
 import { Fader } from '../scene/Space.tsx';
 import { PointCloud, cloud } from '../scene/PointCloud.tsx';
 import { addIrregular, addSpiral } from '../scene/galaxy.ts';
@@ -28,10 +29,14 @@ export function LocalGroupLayer() {
   }, []);
   return (
     <Fader window={LAYER.fade}>
-      <group matrix={GAL_BASIS} matrixAutoUpdate={false}><PointCloud geometry={home} /></group>
+      <group matrix={GAL_BASIS} matrixAutoUpdate={false}>
+        <PointCloud geometry={home} opacity={0.45} />
+        <Glow size={MW.diameterKpc * 0.5} color="#ffd8a8" opacity={0.2} position={[MW.sunDistKpc, 0, 0]} />
+      </group>
       {galaxies.map(({ g, geometry, pos, rot }) => (
         <group key={g.id} position={pos} rotation={rot}>
-          <PointCloud geometry={geometry} />
+          <PointCloud geometry={geometry} opacity={0.45} />
+          <Glow size={g.diameterKpc * 0.6} color={g.shape === 'spiral' ? '#ffe2bd' : '#cfdcff'} opacity={0.2} />
           <Label id={g.id} text={g.name} window={g.shape === 'irregular' ? SATELLITE_LABEL : LAYER.fade} />
         </group>
       ))}

@@ -1,13 +1,14 @@
 import { Suspense, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
-import { Bloom, EffectComposer } from '@react-three/postprocessing';
+import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import type { Group } from 'three';
 import { AU, KPC, MPC, PC } from '../lib/coords.ts';
 import { get } from '../catalog.ts';
-import { simDate } from '../store.ts';
+import { simDate, useStore } from '../store.ts';
+import { clock, sunWorld } from './materials.ts';
 import { Rig } from './Rig.tsx';
-import { Space } from './Space.tsx';
+import { K, Space } from './Space.tsx';
 import { Label } from './Label.tsx';
 import { EarthMoonLayer } from '../layers/EarthMoonLayer.tsx';
 import { InnerSolarLayer } from '../layers/InnerSolarLayer.tsx';
@@ -28,6 +29,11 @@ function YouAreHere() {
 }
 
 export function Universe() {
+  useFrame((_, dt) => {
+    const { focus, logD } = useStore.getState();
+    sunWorld.value.copy(focus).multiplyScalar(-K / 10 ** logD); // the Sun is the world origin
+    clock.value += dt;
+  });
   return (
     <>
       <color attach="background" args={['#020308']} />
@@ -45,8 +51,9 @@ export function Universe() {
       <Space unit={KPC}><MilkyWayLayer /></Space>
       <Space unit={KPC}><LocalGroupLayer /></Space>
       <Space unit={MPC}><CosmicWebLayer /></Space>
-      <EffectComposer>
+      <EffectComposer multisampling={4}>
         <Bloom mipmapBlur luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
+        <Vignette offset={0.3} darkness={0.65} />
       </EffectComposer>
     </>
   );

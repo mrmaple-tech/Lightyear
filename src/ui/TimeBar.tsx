@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { SPEEDS, useStore } from '../store.ts';
 import { TIME_RELEVANT_LOGD } from '../data/layers.ts';
 import { Pause, Play, Reverse } from './icons.tsx';
@@ -6,7 +7,11 @@ import { Pause, Play, Reverse } from './icons.tsx';
 const toInput = (ms: number) => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
 
 export function TimeBar() {
-  const { simTime, playing, speed, reverse, set, setTime } = useStore();
+  // The input shows minutes, so only re-render when the minute changes (not every frame).
+  const { minute, playing, speed, reverse, set } = useStore(
+    useShallow((s) => ({ minute: Math.floor(s.simTime / 6e4), playing: s.playing, speed: s.speed, reverse: s.reverse, set: s.set })),
+  );
+  const simTime = minute * 6e4;
   const dim = useStore((s) => s.logD > TIME_RELEVANT_LOGD);
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -33,7 +38,7 @@ export function TimeBar() {
         onChange={(e) => {
           setDraft(e.target.value);
           const t = new Date(e.target.value).getTime();
-          if (Number.isFinite(t)) setTime(t);
+          if (Number.isFinite(t)) set({ simTime: t });
         }}
       />
       <button className="now" onClick={() => set({ simTime: Date.now(), speed: 0, reverse: false, playing: true })}>Now</button>

@@ -17,13 +17,11 @@ interface Props {
   minFrac?: number;
   /** Sphere material (and any extras sized with the body, e.g. rings). */
   children: ReactNode;
-  /** Extras that should not be scaled with the body (orbit lines). */
-  attached?: ReactNode;
   label?: boolean;
   onFrame?: (mesh: Mesh) => void;
 }
 
-export function Body({ id, window, minFrac = 0.004, children, attached, label = true, onFrame }: Props) {
+export function Body({ id, window, minFrac = 0.006, children, label = true, onFrame }: Props) {
   const obj = get(id);
   const group = useRef<Group>(null!);
   const mesh = useRef<Mesh>(null!);
@@ -50,7 +48,6 @@ export function Body({ id, window, minFrac = 0.004, children, attached, label = 
         <sphereGeometry args={[1, 64, 32]} />
         {children}
       </mesh>
-      {attached}
       {label && <Label id={id} text={obj.name} window={window} />}
     </group>
   );

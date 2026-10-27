@@ -41,11 +41,8 @@ export const radecDir = (ra: number, dec: number) => eqjToScene(...unit(ra * 15,
 /** Ecliptic longitude/latitude (deg) → scene unit vector. */
 export const eclDir = (lon: number, lat: number) => eclToScene(...unit(lon, lat));
 
-const basis = (f: (x: number, y: number, z: number) => Vector3) =>
-  new Matrix4().makeBasis(f(1, 0, 0), f(0, 1, 0), f(0, 0, 1));
-/** Put geometry authored in a native frame inside a group with this matrix. */
-export const EQJ_BASIS = basis(eqjToScene);
-export const GAL_BASIS = basis(galToScene);
+/** Put geometry authored in galactic coordinates inside a group with this matrix. */
+export const GAL_BASIS = new Matrix4().makeBasis(galToScene(1, 0, 0), galToScene(0, 1, 0), galToScene(0, 0, 1));
 
 /** Earth's body-fixed orientation: three.js sphere UVs put longitude 0 on +X and the north pole on +Y. */
 export function earthBasis(date: Date) {

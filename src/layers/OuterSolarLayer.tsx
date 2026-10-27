@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
-import { DoubleSide, Quaternion, Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import { ASTEROID_BELT, BODIES, SATURN_POLE } from '../data/solarSystem.ts';
 import { LAYERS } from '../data/layers.ts';
 import { gauss, radecDir, rng } from '../lib/coords.ts';
-import { Body } from '../scene/Body.tsx';
+import { ringMaterial } from '../scene/materials.ts';
 import { Fader } from '../scene/Space.tsx';
 import { PointCloud, cloud } from '../scene/PointCloud.tsx';
-import { Orbits } from './InnerSolarLayer.tsx';
+import { Orbits, Planet } from './InnerSolarLayer.tsx';
 
 const LAYER = LAYERS[2];
-const BELT_FADE = [10.6, 11.4, 12.9, 13.6] as const;
+const BELT_FADE = [10.6, 11.4, 12.3, 12.9] as const;
 const RING_TILT = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), radecDir(SATURN_POLE.ra, SATURN_POLE.dec));
 
 function AsteroidBelt() {
@@ -28,18 +28,17 @@ function AsteroidBelt() {
 }
 
 export function OuterSolarLayer() {
+  const rings = useMemo(ringMaterial, []);
   return (
     <>
       {BODIES.filter((b) => b.layer === 3).map((b) => (
-        <Body key={b.id} id={b.id} window={b.fade}>
-          <meshStandardMaterial color={b.color} roughness={1} />
+        <Planet key={b.id} b={b}>
           {b.id === 'saturn' && (
-            <mesh quaternion={RING_TILT}>
-              <ringGeometry args={[1.24, 2.27, 96]} />
-              <meshBasicMaterial color="#cdb68a" side={DoubleSide} transparent opacity={0.6} depthWrite={false} />
+            <mesh quaternion={RING_TILT} material={rings}>
+              <ringGeometry args={[1.24, 2.27, 128, 1]} />
             </mesh>
           )}
-        </Body>
+        </Planet>
       ))}
       <Orbits layer={3} fade={LAYER.fade} />
       <Fader window={BELT_FADE}><AsteroidBelt /></Fader>

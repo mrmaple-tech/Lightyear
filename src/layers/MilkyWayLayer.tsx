@@ -3,6 +3,7 @@ import { MILKY_WAY as MW } from '../data/deepSky.ts';
 import { LAYERS } from '../data/layers.ts';
 import { GAL_BASIS } from '../lib/coords.ts';
 import { Label } from '../scene/Label.tsx';
+import { Glow } from '../scene/Glow.tsx';
 import { Fader } from '../scene/Space.tsx';
 import { PointCloud, cloud } from '../scene/PointCloud.tsx';
 import { addSpiral } from '../scene/galaxy.ts';
@@ -20,6 +21,7 @@ export function MilkyWayLayer() {
     <Fader window={LAYER.fade}>
       <group matrix={GAL_BASIS} matrixAutoUpdate={false}>
         <PointCloud geometry={geometry} />
+        <Glow size={11} color="#ffcf94" opacity={0.55} position={[MW.sunDistKpc, 0, 0]} />
         <Label id="milky-way" text="Milky Way" position={[MW.sunDistKpc, 0, 0]} window={[19.6, 20.4, 21.8, 22.4]} />
       </group>
     </Fader>

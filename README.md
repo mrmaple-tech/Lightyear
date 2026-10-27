@@ -51,6 +51,7 @@ scripts/build-stars.mjs   trims the HYG CSV into src/data/stars.json
 - **[HYG star database v4.1](https://github.com/astronexus/HYG-Database)** (CC BY-SA 4.0) supplies the stars. The bundled file holds the 1,000 nearest stars plus bright named stars out to Deneb. To regenerate it: `node scripts/build-stars.mjs hygdata_v41.csv > src/data/stars.json`.
 - **Earth and Moon textures** come from the [three.js examples](https://github.com/mrdoob/three.js/tree/dev/examples/textures/planets) (MIT).
 - **Galaxy positions** (Andromeda, Triangulum, the Magellanic Clouds), cluster positions and other figures are rounded published values, with references on Wikipedia. Voyager positions are extrapolated linearly from their 2024 distances.
+- **Planet surfaces** (other than Earth and the Moon), the Sun's granulation and Saturn's rings are procedural shaders tinted to each body's real colors.
 - **Procedural parts.** The Milky Way's spiral, the galaxy particle clouds, the Oort cloud and the cosmic-web filaments are generated procedurally. They are representative structures, not real maps.
 
 ## Deploying

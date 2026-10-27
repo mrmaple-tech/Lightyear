@@ -42,11 +42,9 @@ interface State {
   selected: string | null;
   readable: boolean;
 
-  zoomBy: (dLog: number) => void;
   flyTo: (id: string, logD?: number, viewDir?: Vector3) => void;
   jumpToLayer: (i: number) => void;
   select: (id: string | null) => void;
-  setTime: (ms: number) => void;
   set: (p: Partial<State>) => void;
 }
 
@@ -65,7 +63,6 @@ export const useStore = create<State>()((set, get) => ({
   selected: null,
   readable: true,
 
-  zoomBy: (d) => set((s) => ({ targetLogD: s.targetLogD + d })),
   flyTo: (to, toLogD, viewDir) => {
     const s = get();
     set({ flight: { to, from: s.focus.clone(), fromLogD: s.logD, toLogD: toLogD ?? NaN, peak: NaN, t: 0, duration: 0, viewDir } });
@@ -75,7 +72,6 @@ export const useStore = create<State>()((set, get) => ({
     get().flyTo(l.focus, l.home, l.viewGal && galDir(...l.viewGal));
   },
   select: (selected) => set({ selected }),
-  setTime: (simTime) => set({ simTime }),
   set: (p) => set(p),
 }));
 
