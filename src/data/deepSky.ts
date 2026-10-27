@@ -29,6 +29,12 @@ export const LOCAL_GROUP: Galaxy[] = [
     fact: 'Ferdinand Magellan\'s crew described both Magellanic Clouds during their 1519 voyage.' },
 ];
 
+/** The group's center of mass sits roughly midway between its two giants. */
+export const LOCAL_GROUP_CENTER = {
+  id: 'local-group', name: 'Local Group', type: 'Galaxy group', towardAndromeda: 0.5, diameterMpc: 3,
+  fact: 'More than 80 galaxies bound by gravity, dominated by the Milky Way and Andromeda, which are falling toward each other.',
+};
+
 export interface Structure {
   id: string;
   name: string;

@@ -7,7 +7,7 @@ import { starRadiusSun, starTemp } from './lib/stars.ts';
 import { LAYERS } from './data/layers.ts';
 import { BODIES, HELIO_OBJECTS, PROBES, SUN } from './data/solarSystem.ts';
 import { FAMOUS_STARS, STARS } from './data/stars.ts';
-import { LOCAL_GROUP, MILKY_WAY, OBSERVABLE_UNIVERSE, STRUCTURES } from './data/deepSky.ts';
+import { LOCAL_GROUP, LOCAL_GROUP_CENTER as LGC, MILKY_WAY, OBSERVABLE_UNIVERSE, STRUCTURES } from './data/deepSky.ts';
 
 export interface CatalogObject {
   id: string;
@@ -92,6 +92,12 @@ export const CATALOG: CatalogObject[] = [
     const p = galDir(g.l, g.b).multiplyScalar(g.distKpc * KPC);
     return { ...g, size: formatSize((g.diameterKpc * KPC) / 2), viewLogD: Math.max(shown(7), Math.log10(g.diameterKpc * KPC * 2.2)), minLogD: shown(7), pos: () => p };
   }),
+  (() => {
+    const mw = galToScene(MILKY_WAY.sunDistKpc, 0, 0);
+    const m31 = galDir(LOCAL_GROUP[0].l, LOCAL_GROUP[0].b).multiplyScalar(LOCAL_GROUP[0].distKpc);
+    const p = mw.lerp(m31, LGC.towardAndromeda).multiplyScalar(KPC);
+    return { ...LGC, size: formatSize((LGC.diameterMpc * MPC) / 2), viewLogD: 22.75, minLogD: shown(7), pos: () => p };
+  })(),
   ...STRUCTURES.map((s) => {
     const p = galDir(s.l, s.b).multiplyScalar(s.distMpc * MPC);
     return { ...s, size: formatSize((s.sizeMpc * MPC) / 2), viewLogD: Math.max(shown(8), Math.log10(s.sizeMpc * MPC * 4)), minLogD: shown(8), pos: () => p };

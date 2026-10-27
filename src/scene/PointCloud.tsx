@@ -30,13 +30,17 @@ interface Props {
   opacity?: number;
   /** Rotate points by their aSpeed with simulation time. */
   spin?: boolean;
+  /** World size (parent units) of a size-1 point; enables distance-attenuated points. */
+  worldSize?: number;
   onPick?: (index: number) => void;
 }
 
 /** One draw call for thousands of points. */
-export function PointCloud({ geometry, opacity = 1, spin, onPick }: Props) {
+export function PointCloud({ geometry, opacity = 1, spin, worldSize = 0, onPick }: Props) {
   const material = useMemo(() => pointsMaterial(opacity), [opacity]);
-  useFrame(() => {
+  useFrame(({ size }) => {
+    material.uniforms.uWorld.value = worldSize;
+    material.uniforms.uHalfH.value = size.height / 2;
     if (spin) material.uniforms.uDays.value = (useStore.getState().simTime - J2000) / 864e5;
   });
   const click = onPick && ((e: ThreeEvent<MouseEvent>) => {

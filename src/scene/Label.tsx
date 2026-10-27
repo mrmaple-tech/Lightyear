@@ -20,7 +20,8 @@ export function Label({ id, text, window, position, variant }: Props) {
   useFrame(() => {
     if (!el.current) return; // Html mounts its DOM a frame later
     const s = useStore.getState();
-    const o = s.focusId === id || s.flight?.to === id ? 1 : fade(s.logD, window);
+    // the focused object stays labeled up close, but not once zoomed out past its own window
+    const o = (s.focusId === id || s.flight?.to === id) && s.logD < window[2] ? 1 : fade(s.logD, window);
     el.current.style.opacity = String(o);
     el.current.style.visibility = o < 0.25 ? 'hidden' : 'visible';
   });

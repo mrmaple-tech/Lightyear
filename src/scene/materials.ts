@@ -1,34 +1,46 @@
 import type { Look } from '../data/solarSystem.ts';
 import { AdditiveBlending, BackSide, CanvasTexture, Color, DoubleSide, ShaderMaterial, Vector3, type Texture } from 'three';
 
-/** Soft round additive points. Optional per-vertex `aSpeed` (rad/day) spins points around Y, used by the asteroid belt. */
+/**
+ * Soft round additive points. Optional per-vertex `aSpeed` (rad/day) spins points around Y, used by the asteroid belt.
+ * With uWorld > 0, `size` is in world units × uWorld instead of pixels: points shrink with distance and fade below
+ * one pixel (alpha ∝ px²), so a distant cloud keeps its surface brightness instead of piling up into a white blob.
+ */
 export const pointsMaterial = (opacity = 1) =>
   new ShaderMaterial({
     transparent: true,
     depthWrite: false,
     blending: AdditiveBlending,
-    uniforms: { uOpacity: { value: opacity }, uDays: { value: 0 }, uPx: { value: Math.min(devicePixelRatio, 2) } },
+    uniforms: { uOpacity: { value: opacity }, uDays: { value: 0 }, uPx: { value: Math.min(devicePixelRatio, 2) }, uWorld: { value: 0 }, uHalfH: { value: 400 } },
     vertexShader: /* glsl */ `
       attribute vec3 color; attribute float size; attribute float aSpeed;
-      uniform float uDays, uPx;
-      varying vec3 vColor; varying float vSize;
+      uniform float uDays, uPx, uWorld, uHalfH;
+      varying vec3 vColor; varying float vSize; varying float vFade;
       void main() {
         vSize = size;
         float a = aSpeed * uDays; float c = cos(a), s = sin(a);
         vec3 p = vec3(c * position.x + s * position.z, position.y, -s * position.x + c * position.z);
         vColor = color;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = size * uPx;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_Position = projectionMatrix * mv;
+        float px = size;
+        vFade = 1.0;
+        if (uWorld > 0.0) {
+          px = size * uWorld * length(modelViewMatrix[0].xyz) * projectionMatrix[1][1] * uHalfH / -mv.z;
+          vFade = min(px * px, 1.0);
+          px = clamp(px, 1.0, 4.0);
+        }
+        gl_PointSize = px * uPx;
       }`,
     fragmentShader: /* glsl */ `
-      uniform float uOpacity; varying vec3 vColor; varying float vSize;
+      uniform float uOpacity; varying vec3 vColor; varying float vSize; varying float vFade;
       void main() {
         vec2 d = abs(gl_PointCoord - 0.5) * 2.0;
         float r = length(d);
         float a = exp(-r * r * 5.0) * (1.0 - smoothstep(0.85, 1.0, r));
         // faint diffraction spikes on the biggest (brightest) points
         a += smoothstep(8.0, 12.0, vSize) * 0.5 * (exp(-d.x * 24.0) + exp(-d.y * 24.0)) * (1.0 - r * 0.9);
-        gl_FragColor = vec4(vColor, a * uOpacity);
+        gl_FragColor = vec4(vColor, a * vFade * uOpacity);
       }`,
   });
 

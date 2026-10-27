@@ -12,10 +12,10 @@ export function addSpiral(c: Cloud, { count, radius, arms = 4, pitchDeg = 13, cx
   for (let i = 0; i < count; i++) {
     const kind = r();
     let x: number, y: number, z: number, col: [number, number, number], size = 1 + r() * 1.2;
-    if (kind < 0.16) { // bulge
+    if (kind < 0.1) { // bulge
       const s = radius * 0.09;
       x = gauss(r) * s; y = gauss(r) * s; z = gauss(r) * s * 0.6;
-      col = [0.6, 0.48, 0.34];
+      col = [0.4, 0.31, 0.22];
     } else {
       const d = Math.min(radius, radius * 0.08 + (-Math.log(1 - r() * 0.98) * radius) / 4);
       const onArm = kind < 0.72;
