@@ -1,6 +1,6 @@
-import { Suspense, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
+import { Suspense, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { PerformanceMonitor, Stars } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import type { Group } from 'three';
 import { AU, KPC, MPC, PC } from '../lib/coords.ts';
@@ -28,7 +28,17 @@ function YouAreHere() {
   return <group ref={ref}><Label id="earth" text="You are here" window={ALWAYS} variant="here" /></group>;
 }
 
+/** Quality tiers for slow GPUs: 2 = full, 1 = lower resolution, 0 = also no bloom. */
+const DPR = [1, 1, 1.5];
+
 export function Universe() {
+  const [tier, setTier] = useState(2);
+  const setDpr = useThree((s) => s.setDpr);
+  const step = (d: number) => setTier((t) => {
+    const n = Math.min(2, Math.max(0, t + d));
+    setDpr(DPR[n]);
+    return n;
+  });
   useFrame((_, dt) => {
     const { focus, logD } = useStore.getState();
     sunWorld.value.copy(focus).multiplyScalar(-K / 10 ** logD); // the Sun is the world origin
@@ -37,6 +47,7 @@ export function Universe() {
   return (
     <>
       <color attach="background" args={['#020308']} />
+      <PerformanceMonitor onDecline={() => step(-1)} onIncline={() => step(1)} flipflops={4} />
       <ambientLight intensity={0.06} />
       <Stars radius={300} depth={80} count={7000} factor={5} saturation={0.4} fade />
       <Rig />
@@ -52,10 +63,12 @@ export function Universe() {
       <Space unit={KPC}><LocalGroupLayer /></Space>
       <Space unit={MPC}><CosmicWebLayer /></Space>
       {/* no MSAA: it multiplies the cost of every point/additive pixel; dpr 1.5 + bloom keep edges soft */}
-      <EffectComposer multisampling={0}>
-        <Bloom mipmapBlur luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
-        <Vignette offset={0.3} darkness={0.65} />
-      </EffectComposer>
+      {tier > 0 && (
+        <EffectComposer multisampling={0}>
+          <Bloom mipmapBlur luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
+          <Vignette offset={0.3} darkness={0.65} />
+        </EffectComposer>
+      )}
     </>
   );
 }

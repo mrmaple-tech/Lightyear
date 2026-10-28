@@ -39,17 +39,17 @@ function web(c: ReturnType<typeof cloud>, seed: number, nodes: number, rMin: num
 export function CosmicWebLayer() {
   const [near, far] = useMemo(() => {
     const n = cloud(), f = cloud();
-    web(n, 5, W.nearNodes, 0, W.nearRadiusMpc, 5, 34, 40);
+    web(n, 5, W.nearNodes, 0, W.nearRadiusMpc, 5, 22, 25);
     // ponytail: the far field reuses the same generator at a coarser scale; real filaments don't grow with distance
-    web(f, 6, W.farNodes, W.nearRadiusMpc, OU.radiusMpc, 110, 22, 18);
+    web(f, 6, W.farNodes, W.nearRadiusMpc, OU.radiusMpc, 110, 14, 12);
     return [n.build(), f.build()];
   }, []);
   const edge = useMemo(() => shellMaterial('#c08bff', 0.35), []);
   return (
     <Fader window={LAYER.fade}>
       {/* World-sized points: distant ones drop to faint single pixels instead of overdrawing the screen. */}
-      <PointCloud geometry={near} opacity={0.9} worldSize={0.6} />
-      <PointCloud geometry={far} opacity={0.9} worldSize={6} />
+      <PointCloud geometry={near} worldSize={1} />
+      <PointCloud geometry={far} worldSize={9} />
       {STRUCTURES.map((s) => (
         <Label key={s.id} id={s.id} text={s.name} window={s.distMpc > 150 ? [24.3, 24.8, 26, 26.6] : s.distMpc < 50 ? [23.4, 23.8, 24.8, 25.15] : [23.6, 24.0, 25.4, 26]} position={galDir(s.l, s.b).multiplyScalar(s.distMpc).toArray()} />
       ))}
