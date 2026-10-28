@@ -11,6 +11,20 @@ import { PointCloud, cloud } from '../scene/PointCloud.tsx';
 const LAYER = LAYERS[7];
 const EDGE_FADE = [25.3, 26.1, Infinity, Infinity] as const;
 
+/** The three points closest to `a`, nearest first. */
+function nearest3(pts: Vector3[], a: Vector3) {
+  const best: [number, Vector3][] = [];
+  for (const b of pts) {
+    if (b === a) continue;
+    const d = b.distanceToSquared(a);
+    if (best.length === 3 && d >= best[2][0]) continue;
+    best.push([d, b]);
+    best.sort((x, y) => x[0] - y[0]);
+    if (best.length > 3) best.pop();
+  }
+  return best.map(([, b]) => b);
+}
+
 /** Random nodes linked to their 3 nearest neighbors; galaxies scatter along the links and pile up at nodes. */
 function web(c: ReturnType<typeof cloud>, seed: number, nodes: number, rMin: number, rMax: number, scatter: number, perLink: number, perNode: number) {
   const r = rng(seed);
@@ -21,9 +35,9 @@ function web(c: ReturnType<typeof cloud>, seed: number, nodes: number, rMin: num
     v.multiplyScalar(rMax);
     if (v.length() >= rMin) pts.push(v);
   }
-  // ponytail: O(n²) neighbor search, fine for a few hundred nodes generated once
+  // ponytail: O(n²) neighbor scan (no sorting), fine for a few hundred nodes generated once
   for (const a of pts) {
-    const near = pts.filter((b) => b !== a).sort((p, q) => p.distanceToSquared(a) - q.distanceToSquared(a)).slice(0, 3);
+    const near = nearest3(pts, a);
     for (const b of near) for (let i = 0; i < perLink; i++) {
       const t = r(), s = scatter * (0.5 + 0.5 * Math.abs(2 * t - 1));
       const k = 0.35 + r() * 0.35;

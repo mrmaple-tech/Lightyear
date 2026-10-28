@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useReducer } from 'react';
 import { useStore } from '../store.ts';
 import { byId, get } from '../catalog.ts';
 import { formatDistance, lightTime } from '../lib/scale.ts';
@@ -7,9 +7,14 @@ import { Close, Target } from './icons.tsx';
 export function InfoCard() {
   const id = useStore((s) => s.selected);
   const obj = id ? byId.get(id) : undefined;
-  // live objects re-render with sim time; static ones only once
-  const t = useStore((s) => (obj?.live ? s.simTime : 0));
   const select = useStore((s) => s.select);
+  // live numbers refresh 4×/s; re-rendering every frame buys nothing a reader can see
+  const [, tick] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    if (!obj?.live) return;
+    const i = setInterval(tick, 250);
+    return () => clearInterval(i);
+  }, [obj]);
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && select(null);
@@ -18,7 +23,7 @@ export function InfoCard() {
   }, [select]);
 
   if (!obj) return null;
-  const date = new Date(t || useStore.getState().simTime);
+  const date = new Date(useStore.getState().simTime);
   const center = obj.id === 'earth' ? 0 : obj.pos(date).distanceTo(get('earth').pos(date));
   // satellites: height above the surface is the meaningful number
   const d = obj.earthOrbit ? center - get('earth').radiusM! : center;

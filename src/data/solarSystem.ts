@@ -66,13 +66,6 @@ export const SATURN_POLE = { ra: 40.589 / 15, dec: 83.537 };
 /** Main asteroid belt extent in AU. */
 export const ASTEROID_BELT = { inner: 2.1, outer: 3.3, count: 4500 };
 
-/** International Space Station (NORAD 25544); its position comes live from src/lib/iss.ts. */
-export const ISS = {
-  id: 'iss', name: 'International Space Station (ISS)', label: 'ISS', type: 'Crewed space station',
-  size: '109 m end to end', fade: [-Infinity, -Infinity, 8.8, 9.4] as Fade,
-  fact: 'It circles Earth every ~92 minutes at about 28,000 km/h, so its crew sees 16 sunrises a day. Continuously crewed since November 2000.',
-};
-
 export interface Probe {
   id: string;
   name: string;

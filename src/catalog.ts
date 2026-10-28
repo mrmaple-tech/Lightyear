@@ -5,8 +5,9 @@ import { AU, KPC, MPC, PC, eqjToScene, galDir, galToScene, radecDir } from './li
 import { formatSize } from './lib/scale.ts';
 import { starRadiusSun, starTemp } from './lib/stars.ts';
 import { LAYERS } from './data/layers.ts';
-import { BODIES, HELIO_OBJECTS, ISS, PROBES, SUN } from './data/solarSystem.ts';
-import { issOffset } from './lib/iss.ts';
+import { BODIES, HELIO_OBJECTS, PROBES, SUN } from './data/solarSystem.ts';
+import { SATELLITES } from './data/satellites.ts';
+import { satOffset } from './lib/satellites.ts';
 import { FAMOUS_STARS, STARS } from './data/stars.ts';
 import { LOCAL_GROUP, LOCAL_GROUP_CENTER as LGC, MILKY_WAY, OBSERVABLE_UNIVERSE, STRUCTURES } from './data/deepSky.ts';
 
@@ -64,14 +65,14 @@ const SPECTRAL: Record<string, string> = {
 export const CATALOG: CatalogObject[] = [
   { ...SUN, ...solid(SUN.radiusKm, 6), pos: () => ORIGIN },
   ...BODIES.map((b) => ({ ...b, ...solid(b.radiusKm, b.id === 'earth' ? 5.6 : 4.5), pos: (t: Date) => helio(b, t) })),
-  {
-    id: ISS.id, name: ISS.name, type: ISS.type, size: ISS.size, fact: ISS.fact, live: true, earthOrbit: true, viewLogD: 6.95, minLogD: 6.3,
+  ...SATELLITES.map((s) => ({
+    id: s.id, name: s.name, type: s.type, size: s.size, fact: s.fact, live: true, earthOrbit: true, viewLogD: s.viewLogD, minLogD: 6.3,
     pos: (t: Date) => {
-      const off = issOffset(t);
+      const off = satOffset(s.norad, t);
       const earth = get('earth').pos(t);
       return off ? earth.clone().add(off) : earth;
     },
-  },
+  })),
   ...PROBES.map((p) => {
     const dir = radecDir(p.ra, p.dec);
     const epoch = Date.parse(p.epoch);

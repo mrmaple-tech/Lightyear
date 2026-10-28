@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # daily rebuild keeps the bundled satellite orbits (TLEs) fresh
+  schedule:
+    - cron: '17 5 * * *'
 
 permissions:
   contents: read
@@ -28,6 +31,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # if CelesTrak is down the site still deploys; the browser then tries live sources itself
+      - run: node --experimental-strip-types scripts/fetch-tle.ts > public/tle.txt || true
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

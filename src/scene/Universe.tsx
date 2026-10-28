@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor, Stars } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
@@ -33,6 +33,18 @@ const DPR = [1, 1, 1.5];
 
 export function Universe() {
   const [tier, setTier] = useState(2);
+  // Layers 4–8 generate hundreds of thousands of procedural points; build them once the browser
+  // is idle after the first paint so Earth appears immediately.
+  const [far, setFar] = useState(false);
+  useEffect(() => {
+    const go = () => setFar(true);
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(go, { timeout: 1500 });
+      return () => cancelIdleCallback(id);
+    }
+    const id = setTimeout(go, 800);
+    return () => clearTimeout(id);
+  }, []);
   const setDpr = useThree((s) => s.setDpr);
   const step = (d: number) => setTier((t) => {
     const n = Math.min(2, Math.max(0, t + d));
@@ -55,17 +67,21 @@ export function Universe() {
         <Suspense fallback={null}><EarthMoonLayer /></Suspense>
         <InnerSolarLayer />
         <OuterSolarLayer />
-        <HeliosphereLayer />
+        {far && <HeliosphereLayer />}
         <YouAreHere />
       </Space>
-      <Space unit={PC}><NearbyStarsLayer /></Space>
-      <Space unit={KPC}><MilkyWayLayer /></Space>
-      <Space unit={KPC}><LocalGroupLayer /></Space>
-      <Space unit={MPC}><CosmicWebLayer /></Space>
+      {far && (
+        <>
+          <Space unit={PC}><NearbyStarsLayer /></Space>
+          <Space unit={KPC}><MilkyWayLayer /></Space>
+          <Space unit={KPC}><LocalGroupLayer /></Space>
+          <Space unit={MPC}><CosmicWebLayer /></Space>
+        </>
+      )}
       {/* no MSAA: it multiplies the cost of every point/additive pixel; dpr 1.5 + bloom keep edges soft */}
       {tier > 0 && (
         <EffectComposer multisampling={0}>
-          <Bloom mipmapBlur luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
+          <Bloom mipmapBlur levels={5} luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
           <Vignette offset={0.3} darkness={0.65} />
         </EffectComposer>
       )}
