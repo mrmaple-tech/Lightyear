@@ -32,6 +32,7 @@ export function formatDistance(m: number) {
 
 export function lightTime(m: number) {
   const s = m / C_LIGHT;
+  if (s < 1) return `${nf(s * 1e3, 1)} light-milliseconds`;
   if (s < 60) return `${nf(s, 2)} light-seconds`;
   if (s < 3600) return `${nf(s / 60, 1)} light-minutes`;
   if (s < 86400) return `${nf(s / 3600, 1)} light-hours`;

@@ -19,7 +19,9 @@ export function InfoCard() {
 
   if (!obj) return null;
   const date = new Date(t || useStore.getState().simTime);
-  const d = obj.id === 'earth' ? 0 : obj.pos(date).distanceTo(get('earth').pos(date));
+  const center = obj.id === 'earth' ? 0 : obj.pos(date).distanceTo(get('earth').pos(date));
+  // satellites: height above the surface is the meaningful number
+  const d = obj.earthOrbit ? center - get('earth').radiusM! : center;
 
   return (
     <aside className="card glass" aria-label={`${obj.name} details`}>
@@ -28,7 +30,7 @@ export function InfoCard() {
       <h2>{obj.name}</h2>
       <dl>
         {obj.size && (<><dt>Size</dt><dd>{obj.size}</dd></>)}
-        <dt>Distance from Earth{obj.live && <span className="live" title="Updates with simulation time">live</span>}</dt>
+        <dt>{obj.earthOrbit ? 'Altitude' : 'Distance from Earth'}{obj.live && <span className="live" title="Updates with simulation time">live</span>}</dt>
         <dd>{d ? formatDistance(d) : 'You are here'}</dd>
         <dt>Light travel time</dt>
         <dd>{d ? lightTime(d) : '—'}</dd>

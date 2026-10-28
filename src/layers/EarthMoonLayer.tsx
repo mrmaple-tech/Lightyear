@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Matrix4, SRGBColorSpace, Vector3, type Group, type Mesh } from 'three';
@@ -6,7 +6,10 @@ import { GeoMoon } from 'astronomy-engine';
 import { useStore, simDate } from '../store.ts';
 import { get } from '../catalog.ts';
 import { AU, earthBasis, eqjToScene } from '../lib/coords.ts';
-import { BODIES } from '../data/solarSystem.ts';
+import { BODIES, ISS } from '../data/solarSystem.ts';
+import { issOffset, issPeriodMin, loadIss } from '../lib/iss.ts';
+import { Label } from '../scene/Label.tsx';
+import { Glow } from '../scene/Glow.tsx';
 import { LAYERS } from '../data/layers.ts';
 import { atmosphereMaterial, earthMaterial } from '../scene/materials.ts';
 import { Body } from '../scene/Body.tsx';
@@ -28,6 +31,55 @@ function MoonOrbit() {
   }, [week]);
   useFrame(() => ref.current.position.copy(get('earth').pos(simDate())).divideScalar(AU));
   return <group ref={ref}><Orbit sample={sample} color="#9aa7bf" opacity={0.3} /></group>;
+}
+
+const HOUR = 3.6e6;
+
+/** The ISS: a glowing marker at its live position plus one orbit of its path, both geocentric. */
+function Iss() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => void loadIss().then(setReady), []);
+  const orbit = useRef<Group>(null!);
+  const dot = useRef<Group>(null!);
+  useFade(ISS.fade, orbit);
+  // the orbit plane drifts a few degrees a day; resample hourly in sim time
+  const hour = useStore((s) => Math.floor(s.simTime / HOUR));
+  const sample = useMemo(() => (f: number) =>
+    issOffset(new Date(hour * HOUR + f * issPeriodMin() * 6e4))?.clone().divideScalar(AU) ?? new Vector3(), [hour, ready]);
+  useFrame(() => {
+    if (!ready) return; // nothing mounted until the orbital elements arrive
+    const t = simDate();
+    const off = issOffset(t);
+    orbit.current.position.copy(get('earth').pos(t)).divideScalar(AU);
+    dot.current.visible = !!off;
+    if (off) dot.current.position.copy(off).divideScalar(AU);
+    // never smaller than a few pixels
+    dot.current.scale.setScalar(Math.max(110, 0.004 * 10 ** useStore.getState().logD) / AU);
+  });
+  if (!ready) return null;
+  return (
+    <group ref={orbit}>
+      <Orbit sample={sample} color="#9fe3ff" opacity={0.35} />
+      <group ref={dot}>
+        <mesh onClick={(e) => { if (e.delta > 6) return; e.stopPropagation(); useStore.getState().select(ISS.id); }}>
+          <octahedronGeometry args={[1, 0]} />
+          <meshBasicMaterial color="#dff6ff" toneMapped={false} />
+        </mesh>
+        <Glow size={6} color="#9fe3ff" opacity={0.8} />
+      </group>
+      <IssLabel />
+    </group>
+  );
+}
+
+/** Label follows the station (kept outside the scaled marker group so it stays put). */
+function IssLabel() {
+  const ref = useRef<Group>(null!);
+  useFrame(() => {
+    const off = issOffset(simDate());
+    if (off) ref.current.position.copy(off).divideScalar(AU);
+  });
+  return <group ref={ref}><Label id={ISS.id} text={ISS.label} window={ISS.fade} /></group>;
 }
 
 export function EarthMoonLayer() {
@@ -61,6 +113,7 @@ export function EarthMoonLayer() {
         <meshStandardMaterial map={moonMap} roughness={1} />
       </Body>
       <MoonOrbit />
+      <Iss />
     </>
   );
 }

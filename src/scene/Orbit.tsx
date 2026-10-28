@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BufferGeometry, Line, LineBasicMaterial, Vector3 } from 'three';
 import { AU } from '../lib/coords.ts';
 
@@ -10,6 +10,8 @@ export function Orbit({ sample, color = '#8fa6d6', opacity = 0.35 }: { sample: (
     const pts = Array.from({ length: SAMPLES + 1 }, (_, i) => sample((i % SAMPLES) / SAMPLES));
     return new Line(new BufferGeometry().setFromPoints(pts), new LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false }));
   }, [sample, color, opacity]);
+  // resampled orbits (Moon, ISS) replace the line; free the old GPU buffers
+  useEffect(() => () => { line.geometry.dispose(); line.material.dispose(); }, [line]);
   return <primitive object={line} />;
 }
 

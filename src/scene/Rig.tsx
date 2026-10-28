@@ -1,6 +1,7 @@
 // Camera rig: log-scale zoom (wheel, trackpad, pinch, keys), fly-to animation,
 // simulation clock and the floating origin. Runs before everything else each frame.
 import { useEffect } from 'react';
+import { Quaternion, Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useStore, SPEEDS } from '../store.ts';
@@ -14,6 +15,9 @@ const ease = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
 // astronomy-engine is accurate far beyond this; the limit keeps dates readable.
 const TIME_MIN = Date.UTC(1700, 0, 1), TIME_MAX = Date.UTC(2300, 0, 1);
 const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
+
+// Outward direction of the Earth-orbiting focus last frame, so the camera can co-rotate with it.
+const radial = new Vector3(), prevRadial = new Vector3(), turn = new Quaternion();
 
 function zoom(dLog: number) {
   const s = useStore.getState();
@@ -82,6 +86,8 @@ export function Rig() {
       const dest = target.pos(date);
       if (!flight.duration) {
         flight.camFrom = camera.position.clone().normalize();
+        // look down on a satellite from outside, never from inside the planet
+        if (target.earthOrbit) flight.viewDir = dest.clone().sub(get('earth').pos(date)).normalize();
         if (Number.isNaN(flight.toLogD)) flight.toLogD = target.viewLogD;
         flight.toLogD = Math.max(flight.toLogD, target.minLogD);
         flight.peak = Math.max(flight.fromLogD, flight.toLogD, Math.log10(flight.from.distanceTo(dest) + 1) + 0.45);
@@ -94,9 +100,18 @@ export function Rig() {
       if (flight.viewDir) camera.position.lerpVectors(flight.camFrom!, flight.viewDir, ease(t)).setLength(K);
       targetLogD = logD;
       focusId = null;
-      if (t >= 1) { focusId = flight.to; flight = null; }
+      if (t >= 1) {
+        focusId = flight.to;
+        flight = null;
+        prevRadial.set(0, 0, 0);
+      }
     } else {
       if (focusId) s.focus.copy(get(focusId).pos(date));
+      if (focusId && get(focusId).earthOrbit) {
+        radial.copy(s.focus).sub(get('earth').pos(date)).normalize();
+        if (prevRadial.lengthSq()) camera.position.applyQuaternion(turn.setFromUnitVectors(prevRadial, radial));
+        prevRadial.copy(radial);
+      }
       targetLogD = clamp(targetLogD, focusId ? Math.max(MIN_LOGD, get(focusId).minLogD) : MIN_LOGD, MAX_LOGD);
       logD = lerp(logD, targetLogD, 1 - Math.exp(-dt * 8));
     }

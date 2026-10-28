@@ -13,6 +13,7 @@ assert.match(scaleBar((4 * LY) / 120).label, /^2 ly$/);
 assert.match(scaleBar((300 * MPC) / 120).label, /^200 Mpc$/);
 assert.ok(scaleBar(1234).px <= 120);
 assert.equal(lightTime(AU), '8.3 light-minutes');
+assert.equal(lightTime(411e3), '1.4 light-milliseconds'); // ISS altitude
 
 // Fade windows.
 assert.equal(fade(5, [0, 1, 8, 9]), 1);
