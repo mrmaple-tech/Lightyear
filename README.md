@@ -1,4 +1,4 @@
-# Lightyear
+# Zoom Out
 
 A zoomable map of the universe. It opens on Earth and zooms out through the solar system, nearby stars, the Milky Way and the Local Group to the cosmic web at the edge of the observable universe. The solar system is live: planets, the Moon and the Sun sit at their real positions for the current date and time, and you can move time with a slider.
 
