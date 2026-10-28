@@ -98,7 +98,7 @@ export function Hud() {
   return (
     <>
       <header className="top">
-        <h1 className="wordmark">Zoom Out</h1>
+        <h1 className="wordmark">Zoomverse</h1>
         <div className="top-right">
           <Search />
           <ScaleToggle />
