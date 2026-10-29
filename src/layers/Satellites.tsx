@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, type Group } from 'three';
-import { useStore, simDate } from '../store.ts';
+import { useStore, simDate, selectOnClick } from '../store.ts';
 import { get } from '../catalog.ts';
 import { AU } from '../lib/coords.ts';
 import { SATELLITES, type Satellite } from '../data/satellites.ts';
@@ -36,7 +36,7 @@ function Sat({ s }: { s: Satellite }) {
     <group ref={ring}>
       <Orbit sample={sample} color="#9fe3ff" opacity={s.ring} />
       <group ref={dot}>
-        <mesh onClick={(e) => { if (e.delta > 6) return; e.stopPropagation(); useStore.getState().select(s.id); }}>
+        <mesh onClick={selectOnClick(s.id)}>
           <octahedronGeometry args={[1, 0]} />
           <meshBasicMaterial color="#dff6ff" toneMapped={false} />
         </mesh>

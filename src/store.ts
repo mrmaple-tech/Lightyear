@@ -76,3 +76,10 @@ export const useStore = create<State>()((set, get) => ({
 }));
 
 export const simDate = () => new Date(useStore.getState().simTime);
+
+/** onClick handler that selects `id`, ignoring clicks that were really camera drags. */
+export const selectOnClick = (id: string) => (e: { delta: number; stopPropagation: () => void }) => {
+  if (e.delta > 6) return;
+  e.stopPropagation();
+  useStore.getState().select(id);
+};

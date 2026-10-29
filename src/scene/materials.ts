@@ -98,13 +98,7 @@ export const shellMaterial = (color: string, opacity: number) =>
     side: BackSide,
     blending: AdditiveBlending,
     uniforms: { uColor: { value: new Color(color) }, uOpacity: { value: opacity } },
-    vertexShader: /* glsl */ `
-      varying vec3 vN; varying vec3 vW;
-      void main() {
-        vN = normalize(mat3(modelMatrix) * normal);
-        vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz;
-        gl_Position = projectionMatrix * viewMatrix * w;
-      }`,
+    vertexShader: SPHERE_VERT,
     fragmentShader: /* glsl */ `
       uniform vec3 uColor; uniform float uOpacity; varying vec3 vN; varying vec3 vW;
       void main() {
@@ -191,16 +185,15 @@ export const ringMaterial = () =>
     transparent: true,
     depthWrite: false,
     side: DoubleSide,
-    uniforms: { sunPos: sunWorld, uOpacity: { value: 1 } },
+    uniforms: { uOpacity: { value: 1 } },
     vertexShader: /* glsl */ `
-      varying float vR; varying vec3 vW;
+      varying float vR;
       void main() {
         vR = length(position.xy);
-        vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz;
-        gl_Position = projectionMatrix * viewMatrix * w;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: /* glsl */ `
-      uniform float uOpacity; varying float vR; varying vec3 vW;
+      uniform float uOpacity; varying float vR;
       ${NOISE}
       void main() {
         float a = smoothstep(1.24, 1.32, vR) * (1.0 - smoothstep(2.2, 2.27, vR));

@@ -3,7 +3,7 @@
 import { useRef, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Group, Mesh } from 'three';
-import { useStore, simDate } from '../store.ts';
+import { useStore, simDate, selectOnClick } from '../store.ts';
 import { get } from '../catalog.ts';
 import { AU } from '../lib/coords.ts';
 import type { Fade } from '../data/layers.ts';
@@ -37,14 +37,7 @@ export function Body({ id, window, minFrac = 0.006, children, label = true, onFr
   });
   return (
     <group ref={group}>
-      <mesh
-        ref={mesh}
-        onClick={(e) => {
-          if (e.delta > 6) return;
-          e.stopPropagation();
-          useStore.getState().select(id);
-        }}
-      >
+      <mesh ref={mesh} onClick={selectOnClick(id)}>
         <sphereGeometry args={[1, 64, 32]} />
         {children}
       </mesh>
