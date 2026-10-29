@@ -30,7 +30,9 @@ export function Rig() {
   const camera = useThree((s) => s.camera);
 
   useEffect(() => {
-    const el = gl.domElement;
+    // The canvas container, not the canvas: 3D labels sit on top of the canvas, and a wheel or pinch
+    // over a label (they slide under the cursor while zooming) must still zoom.
+    const el = gl.domElement.closest<HTMLElement>('.scene') ?? gl.domElement;
     const pts = new Map<number, { x: number; y: number }>();
     let last = 0;
     const wheel = (e: WheelEvent) => {

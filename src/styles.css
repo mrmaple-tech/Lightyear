@@ -123,7 +123,7 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
   border: 1px solid rgba(255, 255, 255, 0.08); transition: opacity 200ms linear, background 200ms var(--ease);
   user-select: none;
 }
-.label:hover { background: rgba(30, 36, 56, 0.8); }
+.label:hover { border-color: rgba(255, 255, 255, 0.35); color: #fff; }
 .label.faint { color: var(--muted); font-style: italic; }
 .label.selected { border-color: var(--accent); color: #fff; }
 .label.here { display: flex; align-items: center; gap: 6px; color: var(--accent-ink); background: var(--accent); font-weight: 600; transform: translate(10px, -50%); }
