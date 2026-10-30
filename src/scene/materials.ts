@@ -187,19 +187,22 @@ export const planetMaterial = ({ colors, bands, turb, rim }: Look, seed: number)
       }`,
   });
 
-/** The Sun: churning granulation, limb darkening, pushed past 1.0 so bloom catches it. */
-export const sunMaterial = () =>
+/**
+ * The Sun (or any star, given its granulation colors): churning granulation, limb darkening,
+ * pushed past 1.0 so bloom catches it.
+ */
+export const sunMaterial = (dark: [number, number, number] = [1, 0.42, 0.08], light: [number, number, number] = [1, 0.92, 0.65]) =>
   new ShaderMaterial({
     transparent: true,
-    uniforms: { uTime: clock, uOpacity: { value: 1 } },
+    uniforms: { uTime: clock, uOpacity: { value: 1 }, cDark: { value: new Vector3(...dark) }, cLight: { value: new Vector3(...light) } },
     vertexShader: SPHERE_VERT,
     fragmentShader: /* glsl */ `
-      uniform float uTime, uOpacity; varying vec3 vP; varying vec3 vN; varying vec3 vW;
+      uniform float uTime, uOpacity; uniform vec3 cDark, cLight; varying vec3 vP; varying vec3 vN; varying vec3 vW;
       ${NOISE}
       void main() {
         float g = fbm(vP * 7.0 + vec3(0.0, uTime * 0.04, uTime * 0.03));
         float s = fbm(vP * 2.5 - uTime * 0.01);
-        vec3 col = mix(vec3(1.0, 0.42, 0.08), vec3(1.0, 0.92, 0.65), smoothstep(0.25, 0.75, g));
+        vec3 col = mix(cDark, cLight, smoothstep(0.25, 0.75, g));
         col *= 0.75 + 0.5 * s;
         float mu = clamp(dot(normalize(vN), normalize(cameraPosition - vW)), 0.0, 1.0);
         col *= 0.45 + 0.55 * pow(mu, 0.5);

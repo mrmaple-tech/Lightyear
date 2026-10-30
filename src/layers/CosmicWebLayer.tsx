@@ -1,54 +1,15 @@
 import { useMemo } from 'react';
-import { Vector3 } from 'three';
 import { COSMIC_WEB as W, OBSERVABLE_UNIVERSE as OU, STRUCTURES } from '../data/deepSky.ts';
 import { LAYERS } from '../data/layers.ts';
-import { galDir, gauss, rng } from '../lib/coords.ts';
+import { galDir } from '../lib/coords.ts';
 import { shellMaterial } from '../scene/materials.ts';
 import { Label } from '../scene/Label.tsx';
 import { Fader } from '../scene/Space.tsx';
 import { PointCloud, cloud } from '../scene/PointCloud.tsx';
+import { web } from '../scene/galaxy.ts';
 
 const LAYER = LAYERS[7];
 const EDGE_FADE = [25.3, 26.1, Infinity, Infinity] as const;
-
-/** The three points closest to `a`, nearest first. */
-function nearest3(pts: Vector3[], a: Vector3) {
-  const best: [number, Vector3][] = [];
-  for (const b of pts) {
-    if (b === a) continue;
-    const d = b.distanceToSquared(a);
-    if (best.length === 3 && d >= best[2][0]) continue;
-    best.push([d, b]);
-    best.sort((x, y) => x[0] - y[0]);
-    if (best.length > 3) best.pop();
-  }
-  return best.map(([, b]) => b);
-}
-
-/** Random nodes linked to their 3 nearest neighbors; galaxies scatter along the links and pile up at nodes. */
-function web(c: ReturnType<typeof cloud>, seed: number, nodes: number, rMin: number, rMax: number, scatter: number, perLink: number, perNode: number) {
-  const r = rng(seed);
-  const pts: Vector3[] = [];
-  while (pts.length < nodes) {
-    const v = new Vector3(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1);
-    if (v.length() > 1) continue;
-    v.multiplyScalar(rMax);
-    if (v.length() >= rMin) pts.push(v);
-  }
-  // ponytail: O(n²) neighbor scan (no sorting), fine for a few hundred nodes generated once
-  for (const a of pts) {
-    const near = nearest3(pts, a);
-    for (const b of near) for (let i = 0; i < perLink; i++) {
-      const t = r(), s = scatter * (0.5 + 0.5 * Math.abs(2 * t - 1));
-      const k = 0.35 + r() * 0.35;
-      c.push(a.x + (b.x - a.x) * t + gauss(r) * s, a.y + (b.y - a.y) * t + gauss(r) * s, a.z + (b.z - a.z) * t + gauss(r) * s, 0.5 * k, 0.6 * k, k, 1.2 + r());
-    }
-    for (let i = 0; i < perNode; i++) {
-      const k = 0.5 + r() * 0.5;
-      c.push(a.x + gauss(r) * scatter * 1.3, a.y + gauss(r) * scatter * 1.3, a.z + gauss(r) * scatter * 1.3, k, 0.8 * k, 0.62 * k, 1.4 + r() * 1.2);
-    }
-  }
-}
 
 export function CosmicWebLayer() {
   const [near, far] = useMemo(() => {

@@ -175,8 +175,9 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
 .panel .row button { height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
 .panel .row button[aria-pressed='true'] { background: rgba(255, 255, 255, 0.12); color: var(--text); }
 
-.sizes svg { display: block; }
-.sz-name { fill: #cfd6e4; font-size: 13px; font-family: inherit; }
+.sz-baseline { position: absolute; left: 0; right: 0; height: 1px; background: rgba(255, 255, 255, 0.12); pointer-events: none; }
+.sz-name { position: absolute; transform: translateX(-50%); white-space: nowrap; color: #cfd6e4; font-size: 13px; pointer-events: none; }
+.sz-note { max-width: 520px; margin: 6px auto 0 !important; font-size: 13px; padding: 0 16px; }
 .sz-head { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; pointer-events: none; }
 .sz-head h2 { margin: 0; font-size: 28px; font-weight: 600; }
 .sz-head p { margin: 4px 0 0; color: var(--muted); }
