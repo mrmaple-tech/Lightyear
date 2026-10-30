@@ -4,6 +4,8 @@ import { HelioVector, Body } from 'astronomy-engine';
 import { eqjToScene, earthBasis, fade, AU, LY, MPC } from './coords.ts';
 import { scaleBar, lightTime, niceFloor } from './scale.ts';
 import { Vector3 } from 'three';
+import { addTles } from './satellites.ts';
+import { passes } from './passes.ts';
 
 // Scale bar picks round numbers and the right unit at each scale.
 assert.equal(niceFloor(730), 500);
@@ -34,5 +36,20 @@ assert.ok(sunDir.dot(lon0) > 0.99, `subsolar dot ${sunDir.dot(lon0)}`);
 const t2 = new Date('2026-03-20T18:00:00Z');
 const lon90E = new Vector3().setFromMatrixColumn(earthBasis(t2), 2).negate();
 assert.ok(sunDir.dot(lon90E) < -0.99, `90E dot ${sunDir.dot(lon90E)}`);
+
+// Pass prediction: a 2019 ISS orbit over New York, and a synthetic geostationary orbit.
+addTles('1 25544U 98067A   19156.50900463  .00003075  00000-0  59442-4 0  9992\n2 25544  51.6433  59.2583 0008217  16.4489 347.6017 15.51174618173442');
+addTles('1 99999U 19001A   19156.50000000  .00000000  00000-0  00000-0 0  9990\n2 99999   0.0100 000.0000 0001000 000.0000 000.0000  1.00270000    10');
+const from = new Date('2019-06-05T12:00:00Z');
+const iss = passes(25544, 40.7, -74.0, from);
+assert.ok('passes' in iss && iss.passes.length === 5);
+for (const p of iss.passes) {
+  const min = (+p.set - +p.rise) / 6e4;
+  assert.ok(min > 1 && min < 13 && p.maxEl >= 10 && p.maxEl <= 90, `pass ${min} min, ${p.maxEl}°`);
+}
+assert.ok(iss.passes.some((p) => p.visible)); // a dusk pass that evening
+const geo = passes(99999, 40.7, -74.0, from);
+assert.ok('always' in geo && Math.abs(geo.always - 43) < 2 && geo.dir === 'S');
+assert.ok('never' in passes(99999, -33.9, 151.2, from));
 
 console.log('ok');

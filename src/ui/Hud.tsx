@@ -3,7 +3,8 @@ import { useStore } from '../store.ts';
 import { CATALOG } from '../catalog.ts';
 import { LAYERS, layerAt } from '../data/layers.ts';
 import { scaleBar } from '../lib/scale.ts';
-import { Search as SearchIcon } from './icons.tsx';
+import { Circles, Compass, Search as SearchIcon, Sparkle } from './icons.tsx';
+import { startTour } from './Caption.tsx';
 
 const FOV = (50 * Math.PI) / 180;
 const NAMES = [...new Set(CATALOG.map((o) => o.name))].sort();
@@ -94,6 +95,17 @@ function ScaleToggle() {
   );
 }
 
+function Tools() {
+  const set = useStore((s) => s.set);
+  return (
+    <div className="tools glass" role="group" aria-label="Explore">
+      <button onClick={startTour}><Compass /><span>Tour</span></button>
+      <button onClick={() => set({ panel: 'sky', tour: null })}><Sparkle /><span>Sky</span></button>
+      <button onClick={() => set({ panel: 'sizes', tour: null })}><Circles /><span>Sizes</span></button>
+    </div>
+  );
+}
+
 export function Hud() {
   return (
     <>
@@ -102,6 +114,7 @@ export function Hud() {
         <div className="top-right">
           <Search />
           <ScaleToggle />
+          <Tools />
         </div>
       </header>
       <LayerNav />

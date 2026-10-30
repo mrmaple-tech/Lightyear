@@ -42,10 +42,39 @@ interface State {
   selected: string | null;
   readable: boolean;
 
+  /** Guided tour step, or null when not touring. */
+  tour: number | null;
+  /** Full-screen panel over the 3D scene (the scene pauses while one is open). */
+  panel: 'sky' | 'sizes' | null;
+  /** Short message shown above the time bar (tour stops, historic moments). */
+  caption: { title: string; text: string } | null;
+  /** The viewer's location, if they shared it. */
+  home: { lat: number; lon: number } | null;
+
   flyTo: (id: string, logD?: number, viewDir?: Vector3) => void;
   jumpToLayer: (i: number) => void;
   select: (id: string | null) => void;
   set: (p: Partial<State>) => void;
+}
+
+// The viewer's shared location is remembered in this browser only, as a convenience.
+function savedHome() {
+  try {
+    return JSON.parse(localStorage.getItem('zoomverse-home') ?? 'null');
+  } catch {
+    return null;
+  }
+}
+
+/** Ask for the viewer's location (rounded to ~1 km), remember it, and resolve with it. */
+export function locate() {
+  return new Promise<{ lat: number; lon: number }>((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      const home = { lat: Math.round(coords.latitude * 100) / 100, lon: Math.round(coords.longitude * 100) / 100 };
+      useStore.getState().set({ home });
+      try { localStorage.setItem('zoomverse-home', JSON.stringify(home)); } catch { /* private mode */ }
+      resolve(home);
+    }, reject, { timeout: 15000, maximumAge: 3.6e6 }));
 }
 
 export const useStore = create<State>()((set, get) => ({
@@ -63,6 +92,11 @@ export const useStore = create<State>()((set, get) => ({
   selected: null,
   readable: true,
 
+  tour: null,
+  panel: null,
+  caption: null,
+  home: savedHome(),
+
   flyTo: (to, toLogD, viewDir) => {
     const s = get();
     set({ flight: { to, from: s.focus.clone(), fromLogD: s.logD, toLogD: toLogD ?? NaN, peak: NaN, t: 0, duration: 0, viewDir } });
@@ -76,6 +110,18 @@ export const useStore = create<State>()((set, get) => ({
 }));
 
 export const simDate = () => new Date(useStore.getState().simTime);
+
+// astronomy-engine is accurate far beyond this; the limit keeps dates readable.
+const TIME_MIN = Date.UTC(1700, 0, 1), TIME_MAX = Date.UTC(2300, 0, 1);
+
+/** Simulation time after `dt` real seconds at the current speed (pauses at the date limits). */
+export function nextSimTime(dt: number) {
+  const s = useStore.getState();
+  const t = s.playing ? s.simTime + dt * 1000 * SPEEDS[s.speed].rate * (s.reverse ? -1 : 1) : s.simTime;
+  if (t >= TIME_MIN && t <= TIME_MAX) return t;
+  s.set({ playing: false });
+  return Math.min(TIME_MAX, Math.max(TIME_MIN, t));
+}
 
 /** onClick handler that selects `id`, ignoring clicks that were really camera drags. */
 export const selectOnClick = (id: string) => (e: { delta: number; stopPropagation: () => void }) => {

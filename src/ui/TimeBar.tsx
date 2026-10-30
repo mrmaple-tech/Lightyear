@@ -2,7 +2,16 @@ import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { SPEEDS, useStore } from '../store.ts';
 import { TIME_RELEVANT_LOGD } from '../data/layers.ts';
+import { MOMENTS } from '../data/moments.ts';
 import { Pause, Play, Reverse } from './icons.tsx';
+
+/** Jump the clock to a historic moment, pause there, and fly to the scene. */
+function visit(i: number) {
+  const m = MOMENTS[i];
+  const s = useStore.getState();
+  s.set({ simTime: Date.parse(m.date), playing: false, tour: null, caption: { title: m.label, text: m.note } });
+  s.flyTo(m.focus, m.logD);
+}
 
 const toInput = (ms: number) => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
 
@@ -42,6 +51,11 @@ export function TimeBar() {
         }}
       />
       <button className="now" onClick={() => set({ simTime: Date.now(), speed: 0, reverse: false, playing: true })}>Now</button>
+      <label className="sr-only" htmlFor="moments">Jump to a moment in history</label>
+      <select id="moments" className="moments" value="" onChange={(e) => e.target.value && visit(+e.target.value)}>
+        <option value="">Moments…</option>
+        {MOMENTS.map((m, i) => <option key={m.label} value={i}>{m.date.slice(0, 4)} · {m.label}</option>)}
+      </select>
       {dim && <p className="note">Planetary motion is imperceptible at this scale</p>}
     </section>
   );

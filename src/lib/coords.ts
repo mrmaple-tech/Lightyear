@@ -21,7 +21,7 @@ export function eqjToScene(x: number, y: number, z: number) {
   return eclToScene(x, y * c + z * s, -y * s + z * c);
 }
 
-const unit = (lon: number, lat: number): [number, number, number] =>
+export const unit = (lon: number, lat: number): [number, number, number] =>
   [Math.cos(lat * DEG) * Math.cos(lon * DEG), Math.cos(lat * DEG) * Math.sin(lon * DEG), Math.sin(lat * DEG)];
 
 // Galactic → equatorial J2000 (transpose of the standard IAU eq→gal matrix).
@@ -30,9 +30,9 @@ const G = [
   [-0.8734370902, -0.4448296300, -0.1980763734],
   [-0.4838350155, 0.7469822445, 0.4559837762],
 ];
-export function galToScene(x: number, y: number, z: number) {
-  return eqjToScene(G[0][0] * x + G[0][1] * y + G[0][2] * z, G[1][0] * x + G[1][1] * y + G[1][2] * z, G[2][0] * x + G[2][1] * y + G[2][2] * z);
-}
+export const galToEqj = (x: number, y: number, z: number): [number, number, number] =>
+  [G[0][0] * x + G[0][1] * y + G[0][2] * z, G[1][0] * x + G[1][1] * y + G[1][2] * z, G[2][0] * x + G[2][1] * y + G[2][2] * z];
+export const galToScene = (x: number, y: number, z: number) => eqjToScene(...galToEqj(x, y, z));
 
 /** Galactic longitude/latitude (deg) → scene unit vector. */
 export const galDir = (l: number, b: number) => galToScene(...unit(l, b));

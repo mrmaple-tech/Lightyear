@@ -82,6 +82,7 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
 /* Info card */
 .card {
   position: fixed; z-index: 30; right: var(--gap); top: 76px; width: 320px; padding: 20px;
+  max-height: calc(100vh - 180px); overflow-y: auto; overscroll-behavior: contain;
   background: var(--glass-strong); animation: card-in 260ms var(--ease);
 }
 @keyframes card-in { from { opacity: 0; transform: translateY(8px); } }
@@ -129,22 +130,85 @@ button { cursor: pointer; background: none; border: 0; padding: 0; }
 .label.here { display: flex; align-items: center; gap: 6px; color: var(--accent-ink); background: var(--accent); font-weight: 600; transform: translate(10px, -50%); }
 .label .pin { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-ink); box-shadow: 0 0 0 3px rgba(27, 21, 5, 0.25); }
 
+
+/* Explore tools (tour, sky, sizes) */
+.tools { display: flex; padding: 3px; height: 44px; }
+.tools button { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 10px; font-size: 14px; color: var(--muted); transition: background 200ms var(--ease), color 200ms var(--ease); }
+.tools button:hover { background: rgba(255, 255, 255, 0.08); color: var(--text); }
+
+/* Caption (tour stops, moments) */
+.caption {
+  position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); bottom: 96px;
+  width: min(460px, calc(100vw - 2 * var(--gap))); padding: 16px 48px 16px 18px; background: var(--glass-strong);
+  animation: card-in 260ms var(--ease);
+}
+.caption .kicker { margin: 0; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.caption h2 { margin: 2px 0 6px; font-size: 18px; font-weight: 600; }
+.caption p { margin: 0; font-size: 14px; color: #cfd6e4; }
+.caption .row { display: flex; gap: 8px; margin-top: 12px; }
+.caption .row button:not(.primary) { height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); }
+.caption .row button:disabled { opacity: 0.4; cursor: default; }
+.timebar .moments { height: 44px; max-width: 150px; padding: 0 8px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); color: var(--text); font: inherit; font-size: 13px; }
+
+/* Satellite passes in the info card */
+.passes { margin: 0 0 16px; }
+.passes > button { width: 100%; min-height: 44px; border-radius: 10px; border: 1px solid rgba(159, 227, 255, 0.35); color: #bfeeff; font-size: 14px; }
+.passes > button:hover { background: rgba(159, 227, 255, 0.08); }
+.passes h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.passes ul { list-style: none; margin: 0 0 8px; padding: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.passes li { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.passes .visible { color: #8be3b0; font-weight: 600; }
+.hint { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+
+/* Full-screen panels (sky view, size comparison); the time bar stays on top */
+.panel { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow: hidden; animation: card-in 260ms var(--ease); }
+.panel > .close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 2; background: var(--glass-strong); border: 1px solid var(--line); color: var(--text); }
+.timebar { z-index: 50; }
+.panel .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.panel .row button { height: 36px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.panel .row button[aria-pressed='true'] { background: rgba(255, 255, 255, 0.12); color: var(--text); }
+
+.sizes svg { display: block; }
+.sz-name { fill: #cfd6e4; font-size: 13px; font-family: inherit; }
+.sz-head { position: absolute; top: max(20px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; pointer-events: none; }
+.sz-head h2 { margin: 0; font-size: 28px; font-weight: 600; }
+.sz-head p { margin: 4px 0 0; color: var(--muted); }
+.sz-controls { position: absolute; left: 50%; transform: translateX(-50%); bottom: 96px; display: flex; align-items: center; gap: 10px; padding: 6px; width: min(560px, calc(100vw - 2 * var(--gap))); }
+.sz-controls input { flex: 1; accent-color: var(--accent); min-width: 0; }
+.sz-controls button { height: 44px; padding: 0 14px; border-radius: 10px; font-size: 14px; color: var(--text); }
+.sz-controls button:disabled { opacity: 0.35; cursor: default; }
+
+.sky canvas { touch-action: none; cursor: grab; }
+.sky-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.sky-label { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 11px; color: rgba(160, 182, 230, 0.75); margin: -7px 0 0 6px; }
+.sky-label.body { font-size: 13px; font-weight: 600; color: #ffe2a0; }
+.sky-label.cardinal { font-size: 15px; font-weight: 600; color: var(--accent); margin: -10px 0 0 -5px; }
+.sky-head { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 12px; max-width: min(440px, calc(100vw - 80px)); padding: 12px 14px; }
+.sky-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.sky-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+
 @media (max-width: 760px) {
   :root { --gap: 12px; }
   .top { flex-direction: column; }
   .top-right { width: 100%; justify-content: stretch; flex-wrap: nowrap; }
-  .search { flex: 1; width: auto; min-width: 0; }
+  .search { flex: 1 1 100%; width: auto; min-width: 0; }
   .seg { flex: none; }
   .seg button { padding: 0 8px; font-size: 13px; }
-  .layers { top: auto; left: var(--gap); right: var(--gap); bottom: 168px; overflow-x: auto; scrollbar-width: none; }
+  .layers { top: auto; left: var(--gap); right: var(--gap); bottom: 184px; overflow-x: auto; scrollbar-width: none; }
   .layers ol { display: flex; gap: 2px; }
   .layers button { white-space: nowrap; }
   .layers button:not([aria-current]) .name { display: none; }
-  .scalebar { bottom: 222px; }
-  .card { top: auto; left: var(--gap); right: var(--gap); width: auto; bottom: 168px; max-height: 50vh; overflow: auto; }
+  .scalebar { bottom: 238px; }
+  .card { top: auto; left: var(--gap); right: var(--gap); width: auto; bottom: 184px; max-height: 50vh; overflow: auto; }
   .timebar { flex-wrap: wrap; justify-content: center; left: var(--gap); right: var(--gap); transform: none; }
   .timebar input { flex: 1; min-width: 0; }
   .speeds button { padding: 0 7px; font-size: 12px; }
+  .tools button span { display: none; }
+  .tools button { padding: 0 10px; }
+  .top-right { flex-wrap: wrap; }
+  .caption { bottom: 184px; }
+  .sz-controls { bottom: 184px; }
+  .timebar .moments { flex: 1; max-width: none; }
   .timebar .note { position: static; transform: none; order: 10; width: 100%; text-align: center; white-space: normal; }
 }
 

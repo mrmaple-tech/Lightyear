@@ -8,7 +8,7 @@ import { SATELLITES } from '../data/satellites.ts';
 const recs = new Map<number, SatRec>();
 
 /** Parse TLE text (optional name lines + line pairs) into the records we track. */
-function addTles(text: string) {
+export function addTles(text: string) {
   const lines = text.split('\n').map((l) => l.trim());
   lines.forEach((l1, i) => {
     const l2 = lines[i + 1];
@@ -41,6 +41,7 @@ export async function loadSatellites() {
 }
 
 export const hasElements = (norad: number) => recs.has(norad);
+export const getRec = (norad: number) => recs.get(norad);
 
 /** Orbital period in minutes (mean motion is rad/min). */
 export const periodMin = (norad: number) => {

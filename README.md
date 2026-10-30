@@ -11,6 +11,16 @@ npm run build    # type-check + production build into dist/
 npm test         # coordinate-frame and scale-bar checks (Node 22+)
 ```
 
+## Features
+
+- **Eight zoom layers** from Earth to the edge of the observable universe, cross-fading as you scroll.
+- **Live solar system and satellites** at their real positions, with a time slider.
+- **Guided tour** (Tour button): an autopilot from Earth to the cosmic horizon and back, with captions.
+- **Moments in time** (time bar menu): jump to Apollo 11, the 2024 eclipse, the Great Conjunction and more.
+- **Satellite passes**: open a satellite's card and share your location to see when it next flies over, and which passes are visible to the eye.
+- **Sky view** (Sky button): the real sky from your location: stars, constellation figures, the Milky Way, Sun, Moon and planets, following the time slider.
+- **Size comparison** (Sizes button): from the Moon to VY Canis Majoris on one line.
+
 ## Controls
 
 | Action | Mouse / trackpad | Touch |
@@ -51,6 +61,7 @@ scripts/build-stars.mjs   trims the HYG CSV into src/data/stars.json
 - **Satellites** (ISS, Hubble, Tiangong, Landsat 9, GOES-19; list in `src/data/satellites.ts`): the deploy fetches current orbital elements (TLEs) from [CelesTrak](https://celestrak.org) into `tle.txt` and rebuilds daily to keep them fresh. The browser propagates them with [satellite.js](https://github.com/shashwatak/satellite-js) (SGP4), so satellites move in real time and follow the time slider. Missing elements fall back to live requests ([wheretheiss.at](https://wheretheiss.at/w/developer) for the ISS).
 - **[HYG star database v4.1](https://github.com/astronexus/HYG-Database)** (CC BY-SA 4.0) supplies the stars. The bundled file holds the 1,000 nearest stars plus bright named stars out to Deneb. To regenerate it: `node scripts/build-stars.mjs hygdata_v41.csv > src/data/stars.json`.
 - **Earth and Moon textures** (day, night lights, clouds, ocean mask, normal map, Moon) come from the [three.js examples](https://github.com/mrdoob/three.js/tree/dev/examples/textures/planets) (MIT), re-encoded as WebP.
+- **Sky view stars and constellation figures** come from [d3-celestial](https://github.com/ofrohn/d3-celestial) by Olaf Frohn (BSD-3-Clause), trimmed by `scripts/build-sky.mjs`.
 - **Galaxy positions** (Andromeda, Triangulum, the Magellanic Clouds), cluster positions and other figures are rounded published values, with references on Wikipedia. Voyager positions are extrapolated linearly from their 2024 distances.
 - **Planet surfaces** (other than Earth and the Moon), the Sun's granulation and Saturn's rings are procedural shaders tinted to each body's real colors.
 - **Procedural parts.** The Milky Way's spiral, the galaxy particle clouds, the Oort cloud and the cosmic-web filaments are generated procedurally. They are representative structures, not real maps.

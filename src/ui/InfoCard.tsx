@@ -3,6 +3,7 @@ import { useStore } from '../store.ts';
 import { byId, get } from '../catalog.ts';
 import { formatDistance, lightTime } from '../lib/scale.ts';
 import { Close, Target } from './icons.tsx';
+import { Passes } from './Passes.tsx';
 
 export function InfoCard() {
   const id = useStore((s) => s.selected);
@@ -41,6 +42,7 @@ export function InfoCard() {
         <dd>{d ? lightTime(d) : '—'}</dd>
       </dl>
       <p className="fact">{obj.fact}</p>
+      {obj.earthOrbit && <Passes id={obj.id} />}
       <button className="primary" onClick={() => useStore.getState().flyTo(obj.id)}>
         <Target /> Fly to
       </button>

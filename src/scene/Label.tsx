@@ -11,17 +11,19 @@ interface Props {
   window: Fade;
   position?: [number, number, number];
   variant?: 'here' | 'faint';
+  /** Extra per-frame visibility test (e.g. hidden behind the globe). */
+  shown?: () => boolean;
 }
 
 /** Clickable DOM label pinned to a 3D point. Doubles as the hit target for tiny objects. */
-export function Label({ id, text, window, position, variant }: Props) {
+export function Label({ id, text, window, position, variant, shown }: Props) {
   const el = useRef<HTMLButtonElement>(null!);
   const selected = useStore((s) => s.selected === id);
   useFrame(() => {
     if (!el.current) return; // Html mounts its DOM a frame later
     const s = useStore.getState();
     // the focused object stays labeled up close, but not once zoomed out past its own window
-    const o = (s.focusId === id || s.flight?.to === id) && s.logD < window[2] ? 1 : fade(s.logD, window);
+    const o = shown && !shown() ? 0 : (s.focusId === id || s.flight?.to === id) && s.logD < window[2] ? 1 : fade(s.logD, window);
     el.current.style.opacity = String(o);
     el.current.style.visibility = o < 0.25 ? 'hidden' : 'visible';
   });

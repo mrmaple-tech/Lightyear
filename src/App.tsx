@@ -1,9 +1,15 @@
-import { Component, type ReactNode } from 'react';
+import { Component, Suspense, lazy, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Universe } from './scene/Universe.tsx';
 import { Hud } from './ui/Hud.tsx';
 import { InfoCard } from './ui/InfoCard.tsx';
 import { TimeBar } from './ui/TimeBar.tsx';
+import { Caption } from './ui/Caption.tsx';
+import { useStore } from './store.ts';
+
+// Loaded on first open, so they don't weigh on the initial page load.
+const SkyView = lazy(() => import('./ui/SkyView.tsx'));
+const SizeCompare = lazy(() => import('./ui/SizeCompare.tsx'));
 
 /** Without this, a WebGL failure unmounts the whole app and leaves a blank page. */
 class SceneBoundary extends Component<{ children: ReactNode }, { error?: Error }> {
@@ -27,12 +33,14 @@ class SceneBoundary extends Component<{ children: ReactNode }, { error?: Error }
 }
 
 export function App() {
+  const panel = useStore((s) => s.panel);
   return (
     <>
       <SceneBoundary>
         <Canvas
           className="scene"
           dpr={1.5}
+          frameloop={panel ? 'never' : 'always'} // paused behind full-screen panels
           camera={{ position: [0, 3.2, 9.5], fov: 50, near: 0.01, far: 1e7 }}
           gl={{ antialias: false, powerPreference: 'high-performance' }}
           raycaster={{ params: { Points: { threshold: 0.06 } } } as never}
@@ -42,7 +50,12 @@ export function App() {
       </SceneBoundary>
       <Hud />
       <InfoCard />
+      <Caption />
       <TimeBar />
+      <Suspense fallback={null}>
+        {panel === 'sky' && <SkyView />}
+        {panel === 'sizes' && <SizeCompare />}
+      </Suspense>
     </>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Quaternion, Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useStore, SPEEDS } from '../store.ts';
+import { useStore, nextSimTime } from '../store.ts';
 import { get } from '../catalog.ts';
 import { MAX_LOGD, MIN_LOGD } from '../data/layers.ts';
 import { K } from './Space.tsx';
@@ -12,8 +12,6 @@ import { K } from './Space.tsx';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
-// astronomy-engine is accurate far beyond this; the limit keeps dates readable.
-const TIME_MIN = Date.UTC(1700, 0, 1), TIME_MAX = Date.UTC(2300, 0, 1);
 const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 
 // Outward direction of the Earth-orbiting focus last frame, so the camera can co-rotate with it.
@@ -75,11 +73,7 @@ export function Rig() {
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const s = useStore.getState();
-    let simTime = s.playing ? s.simTime + dt * 1000 * SPEEDS[s.speed].rate * (s.reverse ? -1 : 1) : s.simTime;
-    if (simTime < TIME_MIN || simTime > TIME_MAX) {
-      simTime = clamp(simTime, TIME_MIN, TIME_MAX);
-      s.set({ playing: false });
-    }
+    const simTime = nextSimTime(dt);
     const date = new Date(simTime);
     let { logD, targetLogD, focusId, flight } = s;
 

@@ -5,14 +5,15 @@ import { Matrix4, SRGBColorSpace, Vector3, type Group, type Mesh } from 'three';
 import { GeoMoon } from 'astronomy-engine';
 import { useStore, simDate } from '../store.ts';
 import { get } from '../catalog.ts';
-import { AU, earthBasis, eqjToScene } from '../lib/coords.ts';
+import { AU, earthBasis, eqjToScene, unit } from '../lib/coords.ts';
+import { Label } from '../scene/Label.tsx';
 import { BODIES } from '../data/solarSystem.ts';
 import { Satellites } from './Satellites.tsx';
 import { LAYERS } from '../data/layers.ts';
 import { atmosphereMaterial, earthMaterial } from '../scene/materials.ts';
 import { Body } from '../scene/Body.tsx';
 import { Orbit } from '../scene/Orbit.tsx';
-import { useFade } from '../scene/Space.tsx';
+import { K, useFade } from '../scene/Space.tsx';
 
 const LAYER = LAYERS[0];
 const TEXTURES = ['earth_day', 'earth_night', 'earth_clouds', 'earth_spec', 'earth_normal', 'moon'];
@@ -67,6 +68,41 @@ export function EarthMoonLayer() {
       </Body>
       <MoonOrbit />
       <Satellites />
+      <HomeMarker />
     </>
+  );
+}
+
+const SURFACE = new Vector3(), CAM = new Vector3();
+
+/** A gold dot at the viewer's shared location, turning with the Earth; its label hides on the far side. */
+function HomeMarker() {
+  const home = useStore((s) => s.home);
+  const ref = useRef<Group>(null!);
+  const dot = useRef<Group>(null!);
+  const camera = useThree((s) => s.camera);
+  const facing = useRef(true);
+  useFrame(() => {
+    if (!home) return;
+    const t = simDate();
+    const { logD, focus } = useStore.getState();
+    const R = get('earth').radiusM!;
+    const [x, y, z] = unit(home.lon, home.lat);
+    // earth-fixed (x→lon 0, y→lon 90°E, z→north) into the globe's local frame (x, z, -y), then world
+    SURFACE.set(x, z, -y).applyMatrix4(earthBasis(t)).multiplyScalar(R);
+    ref.current.position.copy(get('earth').pos(t)).add(SURFACE).divideScalar(AU);
+    dot.current.scale.setScalar(Math.max(15e3, 0.004 * 10 ** logD) / AU);
+    // camera position in world meters, to test which side of the globe the marker is on
+    CAM.copy(camera.position).multiplyScalar(10 ** logD / K).add(focus).sub(get('earth').pos(t)).sub(SURFACE);
+    facing.current = CAM.dot(SURFACE) > 0;
+  });
+  if (!home) return null;
+  return (
+    <group ref={ref}>
+      <group ref={dot}>
+        <mesh><sphereGeometry args={[1, 12, 8]} /><meshBasicMaterial color="#f2c46d" toneMapped={false} /></mesh>
+      </group>
+      <Label id="earth" text="Your location" window={[-Infinity, -Infinity, 8.6, 9.2]} variant="faint" shown={() => facing.current} />
+    </group>
   );
 }
