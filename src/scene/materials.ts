@@ -44,29 +44,55 @@ export const pointsMaterial = (opacity = 1) =>
       }`,
   });
 
-/** Earth: textured day side, city lights on the night side, terminator from the real Sun direction, thin atmosphere rim. */
-export const earthMaterial = (day: Texture, night: Texture) =>
+export interface EarthMaps { day: Texture; night: Texture; clouds: Texture; spec: Texture; normal: Texture }
+
+/**
+ * Earth: day map with terrain relief (normal map) and ocean sun glint (specular mask), drifting
+ * clouds, city lights on the night side (dimmed under cloud), a warm band along the terminator,
+ * all lit by the real Sun direction.
+ */
+export const earthMaterial = ({ day, night, clouds, spec, normal }: EarthMaps) =>
   new ShaderMaterial({
-    uniforms: { day: { value: day }, night: { value: night }, sunDir: { value: null }, uOpacity: { value: 1 } },
+    uniforms: {
+      day: { value: day }, night: { value: night }, clouds: { value: clouds }, spec: { value: spec }, normalMap: { value: normal },
+      sunDir: { value: new Vector3(1, 0, 0) }, uTime: clock, uOpacity: { value: 1 },
+    },
     transparent: true,
     vertexShader: /* glsl */ `
-      varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vT; varying vec3 vB; varying vec3 vW;
       void main() {
-        vUv = uv; vN = normalize(mat3(modelMatrix) * normal);
+        vUv = uv;
+        // sphere tangent frame: east follows +u, north follows +v
+        vec3 t = normalize(vec3(normal.z, 0.0, -normal.x) + vec3(1e-6, 0.0, 0.0));
+        mat3 m = mat3(modelMatrix);
+        vN = normalize(m * normal); vT = normalize(m * t); vB = cross(vN, vT);
         vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz;
         gl_Position = projectionMatrix * viewMatrix * w;
       }`,
     fragmentShader: /* glsl */ `
-      uniform sampler2D day, night; uniform vec3 sunDir; uniform float uOpacity;
-      varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+      uniform sampler2D day, night, clouds, spec, normalMap; uniform vec3 sunDir; uniform float uTime, uOpacity;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vT; varying vec3 vB; varying vec3 vW;
       void main() {
-        vec3 n = normalize(vN);
-        float l = dot(n, sunDir);
-        vec3 d = texture2D(day, vUv).rgb * max(l, 0.0) * 1.35;
-        vec3 nt = texture2D(night, vUv).rgb * vec3(1.0, 0.8, 0.55) * 0.9;
-        vec3 col = mix(nt, d, smoothstep(-0.12, 0.12, l));
-        float rim = pow(1.0 - max(dot(n, normalize(cameraPosition - vW)), 0.0), 3.0);
-        col += vec3(0.3, 0.55, 1.0) * rim * smoothstep(-0.3, 0.4, l) * 0.9;
+        vec3 n0 = normalize(vN);
+        vec3 nm = texture2D(normalMap, vUv).xyz * 2.0 - 1.0;
+        vec3 n = normalize(normalize(vT) * nm.x + normalize(vB) * nm.y + n0 * nm.z);
+        vec3 V = normalize(cameraPosition - vW);
+        float l0 = dot(n0, sunDir);            // terminator from the smooth sphere
+        float l = dot(n, sunDir);              // relief shading
+        float c = texture2D(clouds, vUv + vec2(uTime * 0.00025, 0.0)).r;
+        float water = texture2D(spec, vUv).r;
+
+        vec3 col = texture2D(day, vUv).rgb * max(l, 0.0) * 1.3;
+        vec3 H = normalize(sunDir + V);
+        float nh = max(dot(n0, H), 0.0);
+        col += (vec3(1.0, 0.93, 0.8) * pow(nh, 600.0) * 0.9 + vec3(0.25, 0.4, 0.6) * pow(nh, 30.0) * 0.18) * water * (1.0 - c) * step(0.0, l0);
+        col = mix(col, vec3(max(l0, 0.0) * 1.05 + 0.015), c * 0.9);
+        col *= mix(vec3(1.0, 0.62, 0.4), vec3(1.0), smoothstep(0.0, 0.3, l0)); // sunlight reddens near the terminator
+
+        vec3 lights = texture2D(night, vUv).rgb * vec3(1.0, 0.8, 0.55) * 0.95 * (1.0 - c * 0.85);
+        col = mix(lights, col, smoothstep(-0.12, 0.12, l0));
+        float rim = pow(1.0 - max(dot(n0, V), 0.0), 3.0);
+        col += vec3(0.3, 0.55, 1.0) * rim * smoothstep(-0.3, 0.4, l0) * 0.9;
         gl_FragColor = vec4(col, uOpacity);
       }`,
   });

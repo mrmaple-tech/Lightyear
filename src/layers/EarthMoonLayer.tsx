@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Matrix4, SRGBColorSpace, Vector3, type Group, type Mesh } from 'three';
 import { GeoMoon } from 'astronomy-engine';
@@ -15,6 +15,7 @@ import { Orbit } from '../scene/Orbit.tsx';
 import { useFade } from '../scene/Space.tsx';
 
 const LAYER = LAYERS[0];
+const TEXTURES = ['earth_day', 'earth_night', 'earth_clouds', 'earth_spec', 'earth_normal', 'moon'];
 const [EARTH, MOON] = BODIES;
 const UP = new Vector3(0, 1, 0);
 const WEEK = 6.048e8;
@@ -32,10 +33,13 @@ function MoonOrbit() {
 }
 
 export function EarthMoonLayer() {
-  const textures = useTexture(['earth_atmos_2048.jpg', 'earth_lights_2048.jpg', 'moon_1024.jpg'].map((f) => `${import.meta.env.BASE_URL}textures/${f}`));
-  textures.forEach((t) => (t.colorSpace = SRGBColorSpace));
-  const [day, night, moonMap] = textures;
-  const earthMat = useMemo(() => earthMaterial(day, night), [day, night]);
+  const maxAniso = useThree((s) => s.gl.capabilities.getMaxAnisotropy());
+  const textures = useTexture(TEXTURES.map((f) => `${import.meta.env.BASE_URL}textures/${f}.webp`));
+  const [day, night, clouds, spec, normal, moonMap] = textures;
+  // color maps are sRGB; clouds/spec/normal are data and stay linear
+  [day, night, moonMap].forEach((t) => (t.colorSpace = SRGBColorSpace));
+  [day, clouds].forEach((t) => (t.anisotropy = Math.min(8, maxAniso))); // sharp near the limb
+  const earthMat = useMemo(() => earthMaterial({ day, night, clouds, spec, normal }), [day, night, clouds, spec, normal]);
   const halo = useMemo(() => atmosphereMaterial('#5c9dff', 1.06), []);
 
   const spinEarth = (m: Mesh) => {

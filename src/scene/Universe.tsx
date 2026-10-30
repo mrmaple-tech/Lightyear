@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor, Stars } from '@react-three/drei';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import type { Group } from 'three';
-import { AU, KPC, MPC, PC } from '../lib/coords.ts';
+import { AU, KPC, MPC, PC, eqjToScene } from '../lib/coords.ts';
 import { get } from '../catalog.ts';
 import { simDate, useStore } from '../store.ts';
 import { clock, sunWorld } from './materials.ts';
@@ -20,11 +20,13 @@ import { LocalGroupLayer } from '../layers/LocalGroupLayer.tsx';
 import { CosmicWebLayer } from '../layers/CosmicWebLayer.tsx';
 
 const ALWAYS = [-Infinity, -Infinity, Infinity, Infinity] as const;
+const ABOVE_POLE = eqjToScene(0, 0, 1).multiplyScalar(get('earth').radiusM! * 1.25);
 
 /** Persistent marker on Earth, visible at every scale. */
 function YouAreHere() {
   const ref = useRef<Group>(null!);
-  useFrame(() => ref.current.position.copy(get('earth').pos(simDate())).divideScalar(AU));
+  // just above the north pole, so it doesn't cover the globe up close (negligible offset when zoomed out)
+  useFrame(() => ref.current.position.copy(get('earth').pos(simDate())).add(ABOVE_POLE).divideScalar(AU));
   return <group ref={ref}><Label id="earth" text="You are here" window={ALWAYS} variant="here" /></group>;
 }
 
