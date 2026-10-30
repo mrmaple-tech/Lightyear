@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, type Group } from 'three';
-import { useStore, simDate, selectOnClick } from '../store.ts';
+import { useStore, simDate, selectOnClick, useSimStep } from '../store.ts';
 import { get } from '../catalog.ts';
 import { AU } from '../lib/coords.ts';
 import { SATELLITES, type Satellite } from '../data/satellites.ts';
@@ -21,7 +21,7 @@ function Sat({ s }: { s: Satellite }) {
   const tag = useRef<Group>(null!);
   useFade(s.fade, ring);
   // orbit planes drift a few degrees a day; resample hourly in sim time
-  const hour = useStore((st) => Math.floor(st.simTime / HOUR));
+  const hour = useSimStep(HOUR);
   const sample = useMemo(() => (f: number) =>
     satOffset(s.norad, new Date(hour * HOUR + f * periodMin(s.norad) * 6e4))?.clone().divideScalar(AU) ?? new Vector3(), [hour, s]);
   useFrame(() => {

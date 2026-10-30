@@ -30,7 +30,11 @@ function YouAreHere() {
   return <group ref={ref}><Label id="earth" text="You are here" window={ALWAYS} variant="here" /></group>;
 }
 
-/** Quality tiers for slow GPUs: 2 = full, 1 = lower resolution, 0 = also no bloom. */
+/**
+ * Quality tiers for slow GPUs: 2 = full, 1 = lower resolution, 0 = also no bloom. Quality only ever
+ * steps down: flipping back and forth rebuilt the effect chain (shader compiles + resizes) each time,
+ * which was itself a source of stutter.
+ */
 const DPR = [1, 1, 1.5];
 
 export function Universe() {
@@ -49,7 +53,7 @@ export function Universe() {
   }, []);
   const setDpr = useThree((s) => s.setDpr);
   const step = (d: number) => setTier((t) => {
-    const n = Math.min(2, Math.max(0, t + d));
+    const n = Math.max(0, t + d);
     setDpr(DPR[n]);
     return n;
   });
@@ -61,7 +65,7 @@ export function Universe() {
   return (
     <>
       <color attach="background" args={['#020308']} />
-      <PerformanceMonitor onDecline={() => step(-1)} onIncline={() => step(1)} flipflops={4} />
+      <PerformanceMonitor onDecline={() => step(-1)} />
       <ambientLight intensity={0.06} />
       <Stars radius={300} depth={80} count={7000} factor={5} saturation={0.4} fade />
       <Rig />
@@ -81,12 +85,11 @@ export function Universe() {
         </>
       )}
       {/* no MSAA: it multiplies the cost of every point/additive pixel; dpr 1.5 + bloom keep edges soft */}
-      {tier > 0 && (
-        <EffectComposer multisampling={0}>
-          <Bloom mipmapBlur levels={5} luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
-          <Vignette offset={0.3} darkness={0.65} />
-        </EffectComposer>
-      )}
+      {/* disabled in place rather than unmounted, so its shaders never recompile */}
+      <EffectComposer multisampling={0} enabled={tier > 0}>
+        <Bloom mipmapBlur levels={5} luminanceThreshold={0.85} intensity={0.9} radius={0.7} />
+        <Vignette offset={0.3} darkness={0.65} />
+      </EffectComposer>
     </>
   );
 }

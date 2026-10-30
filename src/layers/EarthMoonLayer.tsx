@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { Matrix4, SRGBColorSpace, Vector3, type Group, type Mesh } from 'three';
 import { GeoMoon } from 'astronomy-engine';
-import { useStore, simDate } from '../store.ts';
+import { useStore, simDate, useSimStep } from '../store.ts';
 import { get } from '../catalog.ts';
 import { AU, earthBasis, eqjToScene, unit } from '../lib/coords.ts';
 import { Label } from '../scene/Label.tsx';
@@ -24,7 +24,7 @@ const WEEK = 6.048e8;
 function MoonOrbit() {
   const ref = useRef<Group>(null!);
   useFade(LAYER.fade, ref);
-  const week = useStore((s) => Math.floor(s.simTime / WEEK));
+  const week = useSimStep(WEEK);
   const sample = useMemo(() => (f: number) => {
     const g = GeoMoon(new Date(week * WEEK + f * MOON.periodDays * 864e5));
     return eqjToScene(g.x, g.y, g.z);

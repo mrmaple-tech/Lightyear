@@ -43,6 +43,8 @@ export function App() {
           frameloop={panel ? 'never' : 'always'} // paused behind full-screen panels
           camera={{ position: [0, 3.2, 9.5], fov: 50, near: 0.01, far: 1e7 }}
           gl={{ antialias: false, powerPreference: 'high-performance' }}
+          // shader error checks force the GPU to finish every compile on the spot; only useful in dev
+          onCreated={({ gl }) => { gl.debug.checkShaderErrors = import.meta.env.DEV; }}
           raycaster={{ params: { Points: { threshold: 0.06 } } } as never}
         >
           <Universe />

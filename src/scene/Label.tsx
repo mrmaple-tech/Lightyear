@@ -19,6 +19,8 @@ interface Props {
 export function Label({ id, text, window, position, variant, shown }: Props) {
   const el = useRef<HTMLButtonElement>(null!);
   const selected = useStore((s) => s.selected === id);
+  // labels for layers you can't see aren't mounted, so they cost nothing per frame
+  const live = useStore((s) => s.focusId === id || s.flight?.to === id || fade(s.logD, window) > 0.01);
   useFrame(() => {
     if (!el.current) return; // Html mounts its DOM a frame later
     const s = useStore.getState();
@@ -27,6 +29,7 @@ export function Label({ id, text, window, position, variant, shown }: Props) {
     el.current.style.opacity = String(o);
     el.current.style.visibility = o < 0.25 ? 'hidden' : 'visible';
   });
+  if (!live) return null;
   return (
     <Html position={position} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
       <button

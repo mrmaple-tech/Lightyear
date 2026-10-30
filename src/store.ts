@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { Vector3 } from 'three';
 import { LAYERS } from './data/layers.ts';
@@ -110,6 +111,20 @@ export const useStore = create<State>()((set, get) => ({
 }));
 
 export const simDate = () => new Date(useStore.getState().simTime);
+
+/**
+ * floor(simTime / period), refreshed at most twice a second. For resampling orbit lines as they drift:
+ * keying on sim time directly would redo it every frame at fast time speeds.
+ */
+export function useSimStep(period: number) {
+  const step = () => Math.floor(useStore.getState().simTime / period);
+  const [k, setK] = useState(step);
+  useEffect(() => {
+    const i = setInterval(() => setK(step()), 500);
+    return () => clearInterval(i);
+  }, [period]); // eslint-disable-line react-hooks/exhaustive-deps
+  return k;
+}
 
 // astronomy-engine is accurate far beyond this; the limit keeps dates readable.
 const TIME_MIN = Date.UTC(1700, 0, 1), TIME_MAX = Date.UTC(2300, 0, 1);

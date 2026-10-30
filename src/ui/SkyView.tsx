@@ -198,6 +198,7 @@ function Sky({ lat, lon, lines, sats: satList, bodyDirs, satDirs, satUp, skyRef,
   const sun = useRef<Group>(null!);
   const moon = useRef<Group>(null!);
   const tmp = useMemo(() => new Vector3(), []);
+  const lastCalc = useRef(-1e9);
   const black = useMemo(() => new Color('#000'), []);
 
   useFrame(({ scene }, dt) => {
@@ -210,16 +211,21 @@ function Sky({ lat, lon, lines, sats: satList, bodyDirs, satDirs, satUp, skyRef,
     horizonMatrix(date, lat, lon, m);
     skyRef.current!.matrixWorldNeedsUpdate = true;
 
-    const obs = new Observer(lat, lon, 0);
-    const pos = planets.getAttribute('position');
-    BODIES.forEach(({ body }, i) => {
-      const e = Equator(body, date, obs, false, true);
-      bodyDirs[i].copy(eq(e.ra * 15, e.dec));
-      pos.setXYZ(i, bodyDirs[i].x * R * 0.98, bodyDirs[i].y * R * 0.98, bodyDirs[i].z * R * 0.98);
-    });
-    pos.needsUpdate = true;
-    sun.current.position.copy(bodyDirs[0]).multiplyScalar(R * 0.97);
-    moon.current.position.copy(bodyDirs[1]).multiplyScalar(R * 0.96);
+    // positions change slowly on screen: recompute ~15×/s rather than every frame
+    const due = performance.now() - lastCalc.current > 66;
+    if (due) {
+      lastCalc.current = performance.now();
+      const obs = new Observer(lat, lon, 0);
+      const pos = planets.getAttribute('position');
+      BODIES.forEach(({ body }, i) => {
+        const e = Equator(body, date, obs, false, true);
+        bodyDirs[i].copy(eq(e.ra * 15, e.dec));
+        pos.setXYZ(i, bodyDirs[i].x * R * 0.98, bodyDirs[i].y * R * 0.98, bodyDirs[i].z * R * 0.98);
+      });
+      pos.needsUpdate = true;
+      sun.current.position.copy(bodyDirs[0]).multiplyScalar(R * 0.97);
+      moon.current.position.copy(bodyDirs[1]).multiplyScalar(R * 0.96);
+    }
 
     // sun direction in the local frame drives the sky color and the Moon's phase
     const sunLocal = tmp.copy(bodyDirs[0]).applyMatrix4(m);
@@ -230,6 +236,7 @@ function Sky({ lat, lon, lines, sats: satList, bodyDirs, satDirs, satUp, skyRef,
     moonMat.uniforms.earthshine.value = 0.35 * night.current;
     status.current = alt > 0 ? 'Daytime' : alt > -6 ? 'Civil twilight' : alt > -12 ? 'Nautical twilight' : alt > -18 ? 'Astronomical twilight' : 'Night';
     (figures.material as LineBasicMaterial).opacity = 0.32 * night.current;
+    if (!due) return;
     skyRef.current!.traverse((o) => {
       const mat = (o as Points).material as ShaderMaterial | undefined;
       if (mat?.uniforms?.uOpacity && o.parent?.userData.fadesByDay) mat.uniforms.uOpacity.value = night.current;
