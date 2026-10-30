@@ -51,6 +51,8 @@ interface State {
   caption: { title: string; text: string } | null;
   /** The viewer's location, if they shared it. */
   home: { lat: number; lon: number } | null;
+  /** Opening title showing (the scene is framed higher to make room for it). */
+  intro: boolean;
 
   flyTo: (id: string, logD?: number, viewDir?: Vector3) => void;
   jumpToLayer: (i: number) => void;
@@ -97,6 +99,7 @@ export const useStore = create<State>()((set, get) => ({
   panel: null,
   caption: null,
   home: savedHome(),
+  intro: true,
 
   flyTo: (to, toLogD, viewDir) => {
     const s = get();

@@ -3,7 +3,7 @@ import { useStore } from '../store.ts';
 import { CATALOG, byId } from '../catalog.ts';
 import { LAYERS, layerAt } from '../data/layers.ts';
 import { scaleBar } from '../lib/scale.ts';
-import { Circles, Compass, Search as SearchIcon, Sparkle } from './icons.tsx';
+import { Search as SearchIcon } from './icons.tsx';
 import { startTour } from './Caption.tsx';
 import { SATELLITES } from '../data/satellites.ts';
 
@@ -28,7 +28,7 @@ function Search() {
   const [miss, setMiss] = useState(false);
   return (
     <form
-      className="search glass"
+      className="search"
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
@@ -42,7 +42,7 @@ function Search() {
       <input
         id="search"
         list="objects"
-        placeholder="Search planets, stars, galaxies…"
+        placeholder="Search the universe"
         value={q}
         aria-invalid={miss}
         onChange={(e) => {
@@ -72,12 +72,12 @@ function ScaleBar() {
 function LayerNav() {
   const current = useStore((s) => layerAt(s.logD).id);
   return (
-    <nav className="layers glass" aria-label="Zoom layers">
+    <nav className="rail" aria-label="Zoom layers">
       <ol>
         {LAYERS.map((l, i) => (
           <li key={l.id}>
-            <button aria-current={l.id === current ? 'true' : undefined} onClick={() => useStore.getState().jumpToLayer(i)}>
-              <span className="num">{l.id}</span>
+            <button data-n={l.id} aria-current={l.id === current ? 'true' : undefined} onClick={() => useStore.getState().jumpToLayer(i)}>
+              <span className="tick" aria-hidden />
               <span className="name">{l.name}</span>
             </button>
           </li>
@@ -91,21 +91,21 @@ function ScaleToggle() {
   const readable = useStore((s) => s.readable);
   const set = useStore((s) => s.set);
   return (
-    <div className="seg glass" role="group" aria-label="Body size scale">
+    <div className="seg" role="group" aria-label="Body size scale">
       <button aria-pressed={readable} onClick={() => set({ readable: true })}>Readable</button>
       <button aria-pressed={!readable} onClick={() => set({ readable: false })}>True scale</button>
     </div>
   );
 }
 
-function Tools() {
+function Links() {
   const set = useStore((s) => s.set);
   return (
-    <div className="tools glass" role="group" aria-label="Explore">
-      <button onClick={startTour}><Compass /><span>Tour</span></button>
-      <button onClick={() => set({ panel: 'sky', tour: null })}><Sparkle /><span>Sky</span></button>
-      <button onClick={() => set({ panel: 'sizes', tour: null })}><Circles /><span>Sizes</span></button>
-    </div>
+    <nav className="nav-links" aria-label="Explore">
+      <button onClick={startTour}>Tour</button>
+      <button onClick={() => set({ panel: 'sky', tour: null })}>Sky</button>
+      <button onClick={() => set({ panel: 'sizes', tour: null })}>Sizes</button>
+    </nav>
   );
 }
 
@@ -125,12 +125,14 @@ function Following() {
 export function Hud() {
   return (
     <>
-      <header className="top">
-        <h1 className="wordmark">Zoomverse</h1>
-        <div className="top-right">
-          <Search />
-          <ScaleToggle />
-          <Tools />
+      <header className="nav">
+        <div className="nav-inner">
+          <p className="wordmark">Zoom<span>verse</span></p>
+          <Links />
+          <div className="nav-right">
+            <Search />
+            <ScaleToggle />
+          </div>
         </div>
       </header>
       <LayerNav />

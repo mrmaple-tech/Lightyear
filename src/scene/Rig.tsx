@@ -1,7 +1,7 @@
 // Camera rig: log-scale zoom (wheel, trackpad, pinch, keys), fly-to animation,
 // simulation clock and the floating origin. Runs before everything else each frame.
 import { useEffect } from 'react';
-import { Quaternion, Vector3 } from 'three';
+import { Quaternion, Vector3, type PerspectiveCamera } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { useStore, nextSimTime } from '../store.ts';
@@ -16,6 +16,7 @@ const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 
 // Outward direction of the Earth-orbiting focus last frame, so the camera can co-rotate with it.
 const radial = new Vector3(), prevRadial = new Vector3(), turn = new Quaternion();
+let viewShift = 0; // px the view is shifted up by (intro framing)
 
 function zoom(dLog: number) {
   const s = useStore.getState();
@@ -70,9 +71,14 @@ export function Rig() {
     };
   }, [gl]);
 
-  useFrame((_, rawDt) => {
+  useFrame(({ size }, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const s = useStore.getState();
+    // During the intro the scene is framed higher (Earth above the title); ease back afterward.
+    const cam = camera as PerspectiveCamera;
+    viewShift += ((s.intro ? size.height * 0.2 : 0) - viewShift) * (1 - Math.exp(-dt * 2.5));
+    if (viewShift > 0.5) cam.setViewOffset(size.width, size.height, 0, viewShift, size.width, size.height);
+    else if (cam.view) cam.clearViewOffset();
     const simTime = nextSimTime(dt);
     const date = new Date(simTime);
     let { logD, targetLogD, focusId, flight } = s;

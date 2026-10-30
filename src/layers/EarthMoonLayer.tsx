@@ -100,7 +100,7 @@ function HomeMarker() {
   return (
     <group ref={ref}>
       <group ref={dot}>
-        <mesh><sphereGeometry args={[1, 12, 8]} /><meshBasicMaterial color="#f2c46d" toneMapped={false} /></mesh>
+        <mesh><sphereGeometry args={[1, 12, 8]} /><meshBasicMaterial color="#2997ff" toneMapped={false} /></mesh>
       </group>
       <Label id="earth" text="Your location" window={[-Infinity, -Infinity, 8.6, 9.2]} variant="faint" shown={() => facing.current} />
     </group>

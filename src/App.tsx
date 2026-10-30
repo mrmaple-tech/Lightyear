@@ -5,6 +5,7 @@ import { Hud } from './ui/Hud.tsx';
 import { InfoCard } from './ui/InfoCard.tsx';
 import { TimeBar } from './ui/TimeBar.tsx';
 import { Caption } from './ui/Caption.tsx';
+import { Intro } from './ui/Intro.tsx';
 import { useStore } from './store.ts';
 
 // Loaded on first open, so they don't weigh on the initial page load.
@@ -34,8 +35,9 @@ class SceneBoundary extends Component<{ children: ReactNode }, { error?: Error }
 
 export function App() {
   const panel = useStore((s) => s.panel);
+  const intro = useStore((s) => s.intro);
   return (
-    <>
+    <div className={intro ? 'intro-on' : undefined}>
       <SceneBoundary>
         <Canvas
           className="scene"
@@ -58,6 +60,7 @@ export function App() {
         {panel === 'sky' && <SkyView />}
         {panel === 'sizes' && <SizeCompare />}
       </Suspense>
-    </>
+      {intro && <Intro onDone={() => useStore.getState().set({ intro: false })} />}
+    </div>
   );
 }
