@@ -11,5 +11,9 @@ const stars = read('stars.6.json')
   .filter((f) => f.properties.mag <= 5.5)
   .map((f) => [ra(f.geometry.coordinates[0]), r(f.geometry.coordinates[1]), r(f.properties.mag, 1), r(+f.properties.bv || 0.6, 1)]);
 const lines = read('constellations.lines.json').map((f) => f.geometry.coordinates.map((l) => l.map(([a, d]) => [ra(a), r(d)])));
+const starNames = JSON.parse(readFileSync(`${dir}/starnames.json`, 'utf8'));
+const bright = read('stars.6.json')
+  .filter((f) => f.properties.mag <= 2.2 && starNames[f.id]?.name)
+  .map((f) => [starNames[f.id].name, ra(f.geometry.coordinates[0]), r(f.geometry.coordinates[1])]);
 const names = read('constellations.json').map((f) => [f.properties.en || f.properties.name, ra(f.geometry.coordinates[0]), r(f.geometry.coordinates[1])]);
-process.stdout.write(JSON.stringify({ stars, lines, names }));
+process.stdout.write(JSON.stringify({ stars, lines, names, bright }));

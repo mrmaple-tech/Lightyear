@@ -91,7 +91,7 @@ export const earthMaterial = ({ day, night, clouds, spec, normal }: EarthMaps) =
 
         vec3 lights = texture2D(night, vUv).rgb * vec3(1.0, 0.8, 0.55) * 0.95 * (1.0 - c * 0.85);
         col = mix(lights, col, smoothstep(-0.12, 0.12, l0));
-        float rim = pow(1.0 - max(dot(n0, V), 0.0), 3.0);
+        float rim = pow(clamp(1.0 - dot(n0, V), 0.0, 1.0), 3.0);
         col += vec3(0.3, 0.55, 1.0) * rim * smoothstep(-0.3, 0.4, l0) * 0.9;
         gl_FragColor = vec4(col, uOpacity);
       }`,
@@ -128,7 +128,9 @@ export const shellMaterial = (color: string, opacity: number) =>
     fragmentShader: /* glsl */ `
       uniform vec3 uColor; uniform float uOpacity; varying vec3 vN; varying vec3 vW;
       void main() {
-        float f = 1.0 - abs(dot(normalize(vN), normalize(cameraPosition - vW)));
+        // clamp: rounding can push |dot| a hair past 1, and pow() of a negative is NaN on GPUs,
+        // which bloom then smears into black squares
+        float f = clamp(1.0 - abs(dot(normalize(vN), normalize(cameraPosition - vW))), 0.0, 1.0);
         gl_FragColor = vec4(uColor, (0.04 + pow(f, 2.5)) * uOpacity);
       }`,
   });
@@ -179,7 +181,7 @@ export const planetMaterial = ({ colors, bands, turb, rim }: Look, seed: number)
         col = mix(col, c3, smoothstep(0.6, 0.78, fbm(p * 5.0 + 7.0)) * 0.7);
         vec3 N = normalize(vN), L = normalize(sunPos - vW), V = normalize(cameraPosition - vW);
         float l = dot(N, L);
-        float fr = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+        float fr = pow(clamp(1.0 - dot(N, V), 0.0, 1.0), 3.0);
         col = col * (max(l, 0.0) * 1.15 + 0.015) + mix(c2, vec3(0.6, 0.8, 1.0), 0.4) * rim * fr * smoothstep(-0.25, 0.5, l);
         gl_FragColor = vec4(col, uOpacity);
       }`,
@@ -199,7 +201,7 @@ export const sunMaterial = () =>
         float s = fbm(vP * 2.5 - uTime * 0.01);
         vec3 col = mix(vec3(1.0, 0.42, 0.08), vec3(1.0, 0.92, 0.65), smoothstep(0.25, 0.75, g));
         col *= 0.75 + 0.5 * s;
-        float mu = max(dot(normalize(vN), normalize(cameraPosition - vW)), 0.0);
+        float mu = clamp(dot(normalize(vN), normalize(cameraPosition - vW)), 0.0, 1.0);
         col *= 0.45 + 0.55 * pow(mu, 0.5);
         gl_FragColor = vec4(col * 1.7, uOpacity);
       }`,

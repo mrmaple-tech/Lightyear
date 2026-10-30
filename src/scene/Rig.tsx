@@ -83,7 +83,7 @@ export function Rig() {
       if (!flight.duration) {
         flight.camFrom = camera.position.clone().normalize();
         // look down on a satellite from outside, never from inside the planet
-        if (target.earthOrbit) flight.viewDir = dest.clone().sub(get('earth').pos(date)).normalize();
+        if (target.earthOrbit && !flight.viewDir) flight.viewDir = dest.clone().sub(get('earth').pos(date)).normalize();
         if (Number.isNaN(flight.toLogD)) flight.toLogD = target.viewLogD;
         flight.toLogD = Math.max(flight.toLogD, target.minLogD);
         flight.peak = Math.max(flight.fromLogD, flight.toLogD, Math.log10(flight.from.distanceTo(dest) + 1) + 0.45);
@@ -108,7 +108,8 @@ export function Rig() {
         if (prevRadial.lengthSq()) camera.position.applyQuaternion(turn.setFromUnitVectors(prevRadial, radial));
         prevRadial.copy(radial);
       }
-      targetLogD = clamp(targetLogD, focusId ? Math.max(MIN_LOGD, get(focusId).minLogD) : MIN_LOGD, MAX_LOGD);
+      // each object knows how close the camera may get (satellites allow a close chase view)
+      targetLogD = clamp(targetLogD, focusId ? get(focusId).minLogD : MIN_LOGD, MAX_LOGD);
       logD = lerp(logD, targetLogD, 1 - Math.exp(-dt * 8));
     }
     s.set({ simTime, logD, targetLogD, focusId, flight });

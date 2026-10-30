@@ -66,7 +66,7 @@ export const CATALOG: CatalogObject[] = [
   { ...SUN, ...solid(SUN.radiusKm, 6), pos: () => ORIGIN },
   ...BODIES.map((b) => ({ ...b, ...solid(b.radiusKm, b.id === 'earth' ? 5.6 : 4.5), pos: (t: Date) => helio(b, t) })),
   ...SATELLITES.map((s) => ({
-    id: s.id, name: s.name, type: s.type, size: s.size, fact: s.fact, live: true, earthOrbit: true, viewLogD: s.viewLogD, minLogD: 6.3,
+    id: s.id, name: s.name, type: s.type, size: s.size, fact: s.fact, live: true, earthOrbit: true, viewLogD: s.viewLogD, minLogD: 5.3,
     pos: (t: Date) => {
       const off = satOffset(s.norad, t);
       const earth = get('earth').pos(t);

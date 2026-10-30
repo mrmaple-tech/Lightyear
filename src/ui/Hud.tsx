@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../store.ts';
-import { CATALOG } from '../catalog.ts';
+import { CATALOG, byId } from '../catalog.ts';
 import { LAYERS, layerAt } from '../data/layers.ts';
 import { scaleBar } from '../lib/scale.ts';
 import { Circles, Compass, Search as SearchIcon, Sparkle } from './icons.tsx';
 import { startTour } from './Caption.tsx';
+import { SATELLITES } from '../data/satellites.ts';
+
+const SAT_LABEL = Object.fromEntries(SATELLITES.map((s) => [s.id, s.label]));
 
 const FOV = (50 * Math.PI) / 180;
 const NAMES = [...new Set(CATALOG.map((o) => o.name))].sort();
@@ -106,6 +109,19 @@ function Tools() {
   );
 }
 
+/** Shown while the camera rides along with a satellite. */
+function Following() {
+  const sat = useStore((s) => (s.focusId && !s.flight && byId.get(s.focusId)?.earthOrbit ? byId.get(s.focusId)! : null));
+  if (!sat) return null;
+  return (
+    <div className="following glass" role="status">
+      <span className="dot" aria-hidden />
+      Following {SAT_LABEL[sat.id] ?? sat.name}
+      <button onClick={() => useStore.getState().flyTo('earth', 7.55)}>Stop</button>
+    </div>
+  );
+}
+
 export function Hud() {
   return (
     <>
@@ -118,6 +134,7 @@ export function Hud() {
         </div>
       </header>
       <LayerNav />
+      <Following />
       <ScaleBar />
     </>
   );

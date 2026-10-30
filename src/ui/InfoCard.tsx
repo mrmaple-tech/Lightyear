@@ -5,6 +5,23 @@ import { formatDistance, lightTime } from '../lib/scale.ts';
 import { Close, Target } from './icons.tsx';
 import { Passes } from './Passes.tsx';
 
+/**
+ * Chase view: fly in close behind and a little above a satellite, looking along its path with Earth
+ * below; the camera then rides along with the orbit.
+ */
+export function follow(id: string) {
+  const t = useStore.getState().simTime;
+  const up = geo(id, t).normalize();
+  const ahead = geo(id, t + 1000).normalize().sub(up).normalize();
+  useStore.getState().flyTo(id, 5.95, up.multiplyScalar(0.5).addScaledVector(ahead, -0.87).normalize());
+}
+
+/** Position relative to Earth's center (m). Satellite motion must be measured against Earth, not the Sun. */
+const geo = (id: string, t: number) => get(id).pos(new Date(t)).clone().sub(get('earth').pos(new Date(t)));
+
+/** Orbital speed in km/s, from Earth-relative positions a second apart (sim time). */
+const speedKmS = (id: string, t: number) => geo(id, t + 1000).distanceTo(geo(id, t)) / 1e3;
+
 export function InfoCard() {
   const id = useStore((s) => s.selected);
   const obj = id ? byId.get(id) : undefined;
@@ -40,12 +57,16 @@ export function InfoCard() {
         <dd>{d ? formatDistance(d) : 'You are here'}</dd>
         <dt>Light travel time</dt>
         <dd>{d ? lightTime(d) : '—'}</dd>
+        {obj.earthOrbit && (<><dt>Speed</dt><dd>{(() => { const v = speedKmS(obj.id, date.getTime()); return `${v.toFixed(2)} km/s (${Math.round(v * 3600).toLocaleString()} km/h)`; })()}</dd></>)}
       </dl>
       <p className="fact">{obj.fact}</p>
       {obj.earthOrbit && <Passes id={obj.id} />}
-      <button className="primary" onClick={() => useStore.getState().flyTo(obj.id)}>
-        <Target /> Fly to
-      </button>
+      <div className="actions">
+        {obj.earthOrbit && <button className="primary" onClick={() => follow(obj.id)}><Target /> Follow</button>}
+        <button className={obj.earthOrbit ? 'secondary' : 'primary'} onClick={() => useStore.getState().flyTo(obj.id)}>
+          {!obj.earthOrbit && <Target />} Fly to
+        </button>
+      </div>
     </aside>
   );
 }
